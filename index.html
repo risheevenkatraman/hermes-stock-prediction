@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07111f" />
+    <title>Hermes — market intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#" aria-label="Hermes home">
+          <span class="brand-mark">✦</span>
+          <span>hermes</span>
+        </a>
+        <div class="workspace-label">WORKSPACE</div>
+        <nav class="nav-list" aria-label="Primary navigation">
+          <a class="nav-item active" href="#overview"
+            ><span class="nav-icon">⌂</span>Overview</a
+          >
+          <a class="nav-item" href="#watchlist"
+            ><span class="nav-icon">◉</span>Watchlist
+            <span class="nav-count">8</span></a
+          >
+          <a class="nav-item" href="#signals"
+            ><span class="nav-icon">⌁</span>Signals</a
+          >
+          <a class="nav-item" href="#research"
+            ><span class="nav-icon">▤</span>Research</a
+          >
+        </nav>
+        <div class="sidebar-bottom">
+          <div class="model-status">
+            <span class="status-dot"></span>
+            <div>
+              <strong>Model online</strong><small>Updated 2m ago</small>
+            </div>
+          </div>
+          <a class="nav-item muted" href="#settings"
+            ><span class="nav-icon">⚙</span>Settings</a
+          >
+          <div class="user-card">
+            <div class="avatar">JD</div>
+            <div><strong>Jordan Davis</strong><small>Pro workspace</small></div>
+            <span class="more">•••</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-content" id="overview">
+        <header class="topbar">
+          <div class="mobile-brand">
+            <span class="brand-mark">✦</span> hermes
+          </div>
+          <div class="topbar-actions">
+            <span class="market-open"
+              ><span class="status-dot"></span> US markets open</span
+            ><button class="icon-button" aria-label="Notifications">
+              ♢<i></i></button
+            ><button class="avatar small">JD</button>
+          </div>
+        </header>
+
+        <section class="welcome-row">
+          <div>
+            <p class="eyebrow">
+              THURSDAY, SEP 04, 2026 <span class="live-pill">LIVE</span>
+            </p>
+            <h1>Good evening, Jordan <span>✦</span></h1>
+            <p class="subtitle">
+              Your market briefing is ready. Here’s what deserves your attention
+              today.
+            </p>
+          </div>
+          <button class="button primary" id="refreshButton">
+            <span>↻</span> Refresh analysis
+          </button>
+        </section>
+
+        <section class="metric-grid" aria-label="Portfolio summary">
+          <article class="metric-card">
+            <div class="metric-top">
+              <span>MARKET MOOD</span
+              ><span class="trend-badge positive">+6.4%</span>
+            </div>
+            <div class="metric-value">Bullish</div>
+            <div class="meter"><span style="width: 72%"></span></div>
+            <div class="metric-foot">
+              <span>Composite sentiment</span><strong>72 / 100</strong>
+            </div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-top">
+              <span>WATCHLIST PULSE</span
+              ><span class="trend-badge positive">+2.8%</span>
+            </div>
+            <div class="metric-value">Positive</div>
+            <div class="meter purple"><span style="width: 64%"></span></div>
+            <div class="metric-foot">
+              <span>5 of 8 assets rising</span><strong>64 / 100</strong>
+            </div>
+          </article>
+          <article class="metric-card">
+            <div class="metric-top">
+              <span>RISK TEMPERATURE</span
+              ><span class="trend-badge neutral">Moderate</span>
+            </div>
+            <div class="metric-value">Balanced</div>
+            <div class="meter amber"><span style="width: 46%"></span></div>
+            <div class="metric-foot">
+              <span>Volatility index</span><strong>46 / 100</strong>
+            </div>
+          </article>
+          <article class="metric-card budget-card">
+            <div class="metric-top">
+              <span>YOUR INVESTMENT BUDGET</span
+              ><button class="edit-budget" id="editBudget">Edit</button>
+            </div>
+            <div class="metric-value">$5,000</div>
+            <div class="metric-foot">
+              <span>Available to deploy</span
+              ><strong class="text-green">+ $120 this month</strong>
+            </div>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <article class="panel chart-panel" id="watchlist">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">TREND FORECAST</p>
+                <h2>Market outlook</h2>
+              </div>
+              <div class="range-tabs">
+                <button class="range active" data-range="1D">1D</button
+                ><button class="range" data-range="1W">1W</button
+                ><button class="range" data-range="1M">1M</button
+                ><button class="range" data-range="3M">3M</button>
+              </div>
+            </div>
+            <div class="chart-meta">
+              <div>
+                <span class="price-label">S&amp;P 500</span
+                ><strong id="chartPrice">5,521.94</strong
+                ><span class="price-change">+1.24% <span>↗</span></span>
+              </div>
+              <span class="confidence"
+                >Model confidence <strong>78%</strong></span
+              >
+            </div>
+            <div class="chart-wrap">
+              <svg
+                viewBox="0 0 760 250"
+                preserveAspectRatio="none"
+                role="img"
+                aria-label="S&P 500 trend forecast chart"
+              >
+                <defs>
+                  <linearGradient id="area" x1="0" x2="0" y1="0" y2="1">
+                    <stop offset="0%" stop-color="#8e7dff" stop-opacity=".27" />
+                    <stop offset="100%" stop-color="#8e7dff" stop-opacity="0" />
+                  </linearGradient>
+                </defs>
+                <g class="grid-lines">
+                  <line x1="0" y1="35" x2="760" y2="35" />
+                  <line x1="0" y1="96" x2="760" y2="96" />
+                  <line x1="0" y1="157" x2="760" y2="157" />
+                  <line x1="0" y1="218" x2="760" y2="218" />
+                </g>
+                <path
+                  class="chart-area"
+                  d="M0 192 C40 187 52 144 89 161 S125 127 154 145 S192 119 224 132 S254 96 290 116 S327 110 350 91 S391 104 416 83 S452 89 475 68 S511 76 535 57 S566 78 595 50 S635 62 659 39 S703 53 760 20 V250 H0Z"
+                />
+                <path
+                  class="chart-line"
+                  d="M0 192 C40 187 52 144 89 161 S125 127 154 145 S192 119 224 132 S254 96 290 116 S327 110 350 91 S391 104 416 83 S452 89 475 68 S511 76 535 57 S566 78 595 50 S635 62 659 39 S703 53 760 20"
+                />
+                <circle class="chart-point" cx="760" cy="20" r="5" />
+                <line class="today-line" x1="595" y1="18" x2="595" y2="224" />
+                <text x="580" y="242">TODAY</text>
+              </svg>
+              <div class="chart-labels">
+                <span>Aug 28</span><span>Aug 30</span><span>Sep 01</span
+                ><span>Sep 04</span>
+              </div>
+            </div>
+            <div class="forecast-callout">
+              <span class="forecast-icon">✦</span>
+              <div>
+                <strong>Model forecast: continued upside</strong>
+                <p>
+                  Momentum and news sentiment are aligned. Expected range
+                  <b>+1.8% to +3.2%</b> over the next 5 trading days.
+                </p>
+              </div>
+              <span class="arrow">→</span>
+            </div>
+          </article>
+
+          <article class="panel signals-panel" id="signals">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">AI SIGNALS</p>
+                <h2>What’s moving</h2>
+              </div>
+              <a class="see-all" href="#research">See all <span>→</span></a>
+            </div>
+            <div class="signal-list">
+              <div class="signal">
+                <div class="ticker-logo blue">N</div>
+                <div class="signal-main">
+                  <div>
+                    <strong>NVIDIA <small>NVDA</small></strong
+                    ><span class="signal-time">12 min ago</span>
+                  </div>
+                  <p>
+                    New data center partnership points to resilient AI demand.
+                  </p>
+                </div>
+                <span class="signal-score positive">+8.6</span>
+              </div>
+              <div class="signal">
+                <div class="ticker-logo orange">A</div>
+                <div class="signal-main">
+                  <div>
+                    <strong>Amazon <small>AMZN</small></strong
+                    ><span class="signal-time">34 min ago</span>
+                  </div>
+                  <p>
+                    Cloud growth accelerates as enterprise spending returns.
+                  </p>
+                </div>
+                <span class="signal-score positive">+7.2</span>
+              </div>
+              <div class="signal">
+                <div class="ticker-logo pink">T</div>
+                <div class="signal-main">
+                  <div>
+                    <strong>Tesla <small>TSLA</small></strong
+                    ><span class="signal-time">1 hr ago</span>
+                  </div>
+                  <p>Delivery estimates trimmed ahead of quarterly update.</p>
+                </div>
+                <span class="signal-score negative">−4.1</span>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="bottom-grid" id="research">
+          <article class="panel recommendations">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">PERSONALIZED FOR YOU</p>
+                <h2>Ideas within your budget</h2>
+                <p class="panel-subtitle">Balanced growth · $5,000 available</p>
+              </div>
+              <a class="see-all" href="#watchlist"
+                >View portfolio <span>→</span></a
+              >
+            </div>
+            <div class="stock-table">
+              <div class="table-head">
+                <span>ASSET</span><span>MODEL VIEW</span><span>PRICE</span
+                ><span>5D FORECAST</span><span></span>
+              </div>
+              <div class="stock-row">
+                <div class="asset">
+                  <div class="ticker-logo blue">N</div>
+                  <div>
+                    <strong>NVIDIA</strong><small>NVDA · Technology</small>
+                  </div>
+                </div>
+                <span class="view-pill bullish">Strong buy</span
+                ><strong>$119.31</strong
+                ><span class="forecast positive">+3.2% <small>↗</small></span
+                ><button class="add-button" aria-label="Add NVIDIA">+</button>
+              </div>
+              <div class="stock-row">
+                <div class="asset">
+                  <div class="ticker-logo purple">M</div>
+                  <div>
+                    <strong>Microsoft</strong><small>MSFT · Technology</small>
+                  </div>
+                </div>
+                <span class="view-pill bullish">Buy</span
+                ><strong>$415.76</strong
+                ><span class="forecast positive">+2.4% <small>↗</small></span
+                ><button class="add-button" aria-label="Add Microsoft">
+                  +
+                </button>
+              </div>
+              <div class="stock-row">
+                <div class="asset">
+                  <div class="ticker-logo orange">A</div>
+                  <div>
+                    <strong>Amazon</strong><small>AMZN · Consumer</small>
+                  </div>
+                </div>
+                <span class="view-pill watch">Watch</span
+                ><strong>$231.98</strong
+                ><span class="forecast positive">+1.7% <small>↗</small></span
+                ><button class="add-button" aria-label="Add Amazon">+</button>
+              </div>
+            </div>
+          </article>
+          <aside class="panel methodology">
+            <p class="eyebrow">HOW IT WORKS</p>
+            <h2>One clear signal from three sources.</h2>
+            <p>
+              Hermes blends the context behind the numbers so you can make
+              decisions with more conviction.
+            </p>
+            <div class="method-item">
+              <span class="method-icon news">◌</span>
+              <div>
+                <strong>News intelligence</strong
+                ><small>Scans 12,400+ articles daily</small>
+              </div>
+              <span class="check">✓</span>
+            </div>
+            <div class="method-item">
+              <span class="method-icon traders">♧</span>
+              <div>
+                <strong>Trader activity</strong
+                ><small>Tracks institutional flows</small>
+              </div>
+              <span class="check">✓</span>
+            </div>
+            <div class="method-item">
+              <span class="method-icon price">⌁</span>
+              <div>
+                <strong>Price patterns</strong
+                ><small>Finds momentum &amp; risk</small>
+              </div>
+              <span class="check">✓</span>
+            </div>
+            <button class="button secondary">
+              Explore our methodology <span>→</span>
+            </button>
+          </aside>
+        </section>
+        <footer>
+          <span>Hermes intelligence · Data delayed 15 min</span
+          ><span><a href="#">Help center</a><a href="#">Privacy</a></span>
+        </footer>
+      </main>
+    </div>
+    <div class="toast" id="toast">Analysis refreshed <span>✓</span></div>
+    <script src="app.js"></script>
+  </body>
+</html>

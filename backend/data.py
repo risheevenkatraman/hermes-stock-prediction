@@ -13,7 +13,7 @@ class MarketDataError(RuntimeError):
 
 
 def fetch_daily_prices(ticker: str, period: str = "2y") -> pd.DataFrame:
-    """Fetch adjusted daily OHLCV history from Yahoo Finance.
+    """Fetch split-adjusted daily OHLCV history from Yahoo Finance.
 
     Yahoo Finance is used as the initial zero-key provider. A production
     deployment should add a licensed provider behind this same interface.
@@ -23,7 +23,7 @@ def fetch_daily_prices(ticker: str, period: str = "2y") -> pd.DataFrame:
         history = yf.Ticker(symbol).history(
             period=period,
             interval="1d",
-            auto_adjust=False,
+            auto_adjust=True,
             actions=False,
         )
     except Exception as error:

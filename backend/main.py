@@ -60,6 +60,11 @@ def predict(request: PredictionRequest) -> dict:
         "training_rows": result.training_rows,
         "validation": result.metrics,
         "features": result.feature_snapshot,
+        "five_day": {
+            "predicted_return": result.five_day_return,
+            "direction": result.five_day_direction,
+        },
+        "direction_probability": result.direction_probability,
         "disclaimer": "Educational estimate, not financial advice.",
     }
 
@@ -84,8 +89,41 @@ def predict_live(ticker: str) -> dict:
         "training_rows": result.training_rows,
         "validation": result.metrics,
         "features": result.feature_snapshot,
+        "five_day": {
+            "predicted_return": result.five_day_return,
+            "direction": result.five_day_direction,
+        },
+        "direction_probability": result.direction_probability,
         "market_data": metadata,
         "disclaimer": "Educational estimate, not financial advice.",
+    }
+
+
+@app.get("/prices/live/{ticker}")
+def prices_live(
+    ticker: str,
+    range: str = Query(default="1D", pattern=r"^(1D|1W|1M|3M)$"),
+) -> dict:
+    """Return the recent daily bars used to render the trend chart."""
+    provider_period = {"1D": "3mo", "1W": "3mo", "1M": "3mo", "3M": "1y"}[range]
+    visible_rows = {"1D": 2, "1W": 5, "1M": 22, "3M": 66}[range]
+    try:
+        prices = fetch_daily_prices(ticker, period=provider_period)
+    except (MarketDataError, ValueError) as error:
+        raise HTTPException(status_code=502, detail=str(error)) from error
+
+    rows = prices.tail(visible_rows)
+    return {
+        "ticker": ticker.upper(),
+        "range": range,
+        "market_data": latest_market_metadata(prices),
+        "prices": [
+            {
+                "date": str(row["date"]),
+                "close": round(float(row["close"]), 2),
+            }
+            for _, row in rows.iterrows()
+        ],
     }
 
 
@@ -144,7 +182,7 @@ def backtest_multiple(
         )
 
     summary: dict[str, dict[str, float | int]] = {}
-    strategy_keys = ("model", "previous_day", "buy_and_hold")
+    strategy_keys = tuple(next(iter(results.values()))["strategies"])
     for strategy in strategy_keys:
         values = [result["strategies"][strategy] for result in results.values()]
         summary[strategy] = {
@@ -162,6 +200,28 @@ def backtest_multiple(
                 sum(float(value["cumulative_return"]) for value in values)
                 / len(values),
                 4,
+            ),
+            "average_max_drawdown": round(
+                sum(float(value["max_drawdown"]) for value in values) / len(values),
+                4,
+            ),
+            "average_annualized_volatility": round(
+                sum(float(value["annualized_volatility"]) for value in values)
+                / len(values),
+                4,
+            ),
+            "average_brier_score": (
+                round(
+                    sum(
+                        float(value["brier_score"])
+                        for value in values
+                        if value["brier_score"] is not None
+                    )
+                    / sum(value["brier_score"] is not None for value in values),
+                    6,
+                )
+                if any(value["brier_score"] is not None for value in values)
+                else None
             ),
         }
 

@@ -82,6 +82,42 @@
           <button class="button primary" id="refreshButton">
             <span>↻</span> Refresh analysis
           </button>
+          <form class="ticker-controls" id="tickerForm">
+            <label for="tickerInput">SYMBOL</label>
+            <input
+              id="tickerInput"
+              name="ticker"
+              value="SPY"
+              maxlength="10"
+              pattern="[A-Za-z0-9.\-]+"
+              autocomplete="off"
+              aria-label="Stock ticker symbol"
+            />
+            <button class="button secondary" type="submit">
+              Analyze ticker
+            </button>
+            <div class="ticker-presets" aria-label="Popular ticker symbols">
+              <button
+                type="button"
+                class="ticker-preset active"
+                data-ticker="SPY"
+              >
+                SPY
+              </button>
+              <button type="button" class="ticker-preset" data-ticker="AAPL">
+                AAPL
+              </button>
+              <button type="button" class="ticker-preset" data-ticker="NVDA">
+                NVDA
+              </button>
+              <button type="button" class="ticker-preset" data-ticker="MSFT">
+                MSFT
+              </button>
+              <button type="button" class="ticker-preset" data-ticker="TSLA">
+                TSLA
+              </button>
+            </div>
+          </form>
         </section>
 
         <section class="metric-grid" aria-label="Portfolio summary">
@@ -139,28 +175,30 @@
                 <h2>Market outlook</h2>
               </div>
               <div class="range-tabs">
-                <button class="range active" data-range="1D">1D</button
-                ><button class="range" data-range="1W">1W</button
-                ><button class="range" data-range="1M">1M</button
-                ><button class="range" data-range="3M">3M</button>
+                <button class="range active" data-range="1D" type="button">
+                  1D</button
+                ><button class="range" data-range="1W" type="button">1W</button
+                ><button class="range" data-range="1M" type="button">1M</button
+                ><button class="range" data-range="3M" type="button">3M</button>
               </div>
             </div>
             <div class="chart-meta">
               <div>
-                <span class="price-label">S&amp;P 500</span
-                ><strong id="chartPrice">5,521.94</strong
-                ><span class="price-change">+1.24% <span>↗</span></span>
+                <span class="price-label">S&amp;P 500 · forecast</span>
+                <strong id="chartPrice">5,521.94</strong>
+                <span class="price-change">next trading day</span>
               </div>
-              <span class="confidence"
-                >Model confidence <strong>78%</strong></span
-              >
+              <span class="confidence">
+                Current price <strong id="currentPrice">5,521.94</strong>
+              </span>
             </div>
             <div class="chart-wrap">
               <svg
                 viewBox="0 0 760 250"
                 preserveAspectRatio="none"
                 role="img"
-                aria-label="S&P 500 trend forecast chart"
+                id="trendChart"
+                aria-label="SPY daily price trend chart"
               >
                 <defs>
                   <linearGradient id="area" x1="0" x2="0" y1="0" y2="1">
@@ -174,21 +212,15 @@
                   <line x1="0" y1="157" x2="760" y2="157" />
                   <line x1="0" y1="218" x2="760" y2="218" />
                 </g>
-                <path
-                  class="chart-area"
-                  d="M0 192 C40 187 52 144 89 161 S125 127 154 145 S192 119 224 132 S254 96 290 116 S327 110 350 91 S391 104 416 83 S452 89 475 68 S511 76 535 57 S566 78 595 50 S635 62 659 39 S703 53 760 20 V250 H0Z"
-                />
-                <path
-                  class="chart-line"
-                  d="M0 192 C40 187 52 144 89 161 S125 127 154 145 S192 119 224 132 S254 96 290 116 S327 110 350 91 S391 104 416 83 S452 89 475 68 S511 76 535 57 S566 78 595 50 S635 62 659 39 S703 53 760 20"
-                />
-                <circle class="chart-point" cx="760" cy="20" r="5" />
-                <line class="today-line" x1="595" y1="18" x2="595" y2="224" />
-                <text x="580" y="242">TODAY</text>
+                <path id="chartArea" class="chart-area" />
+                <path id="chartLine" class="chart-line" />
+                <circle id="chartPoint" class="chart-point" r="5" />
+                <line id="todayLine" class="today-line" />
+                <text id="todayLabel">LATEST</text>
               </svg>
               <div class="chart-labels">
-                <span>Aug 28</span><span>Aug 30</span><span>Sep 01</span
-                ><span>Sep 04</span>
+                <span id="chartStartLabel">Loading…</span
+                ><span id="chartEndLabel">Loading…</span>
               </div>
             </div>
             <div class="forecast-callout">
@@ -346,6 +378,38 @@
               Explore our methodology <span>→</span>
             </button>
           </aside>
+        </section>
+        <section class="panel performance-panel" id="performance">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">MODEL PERFORMANCE</p>
+              <h2>Backtest across the market</h2>
+              <p class="panel-subtitle">
+                Walk-forward evaluation · selected market basket
+              </p>
+            </div>
+            <button
+              class="button secondary performance-button"
+              id="loadPerformance"
+            >
+              Load performance
+              <span>→</span>
+            </button>
+          </div>
+          <div class="performance-content" id="performanceContent">
+            <div class="performance-empty">
+              <span class="forecast-icon">⌁</span>
+              <div>
+                <strong
+                  >See how Hermes compares before trusting a signal.</strong
+                >
+                <p>
+                  Run a five-year walk-forward backtest against two simple
+                  benchmarks.
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
         <footer>
           <span>Hermes intelligence · Data delayed 15 min</span

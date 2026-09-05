@@ -45,7 +45,19 @@ def test_forecast_returns_bounded_prediction_and_validation_metrics():
     assert 0.5 <= result.confidence <= 0.95
     assert result.expected_price > 0
     assert result.metrics["mae"] >= 0
+    assert 0 <= result.metrics["directional_accuracy"] <= 1
     assert result.training_rows > 40
+    assert result.five_day_direction in {"up", "down", "flat"}
+    assert -1 < result.five_day_return < 1
+    assert 0 <= result.direction_probability <= 1
+
+
+def test_forecast_uses_latest_price_row_for_inference_features():
+    prices = synthetic_prices(100)
+    result = forecast(prices)
+    expected_return = prices["close"].iloc[-1] / prices["close"].iloc[-2] - 1
+
+    assert result.feature_snapshot["return_1d"] == round(float(expected_return), 6)
 
 
 def test_live_prediction_endpoint_uses_ingested_history(monkeypatch):
@@ -61,13 +73,45 @@ def test_live_prediction_endpoint_uses_ingested_history(monkeypatch):
     assert payload["market_data"]["as_of"] == "2025-05-20"
 
 
+def test_live_prices_endpoint_returns_selected_chart_window(monkeypatch):
+    from backend import main
+
+    def fake_fetch(*args, **kwargs):
+        del args, kwargs
+        return synthetic_prices(100)
+
+    monkeypatch.setattr(
+        main,
+        "fetch_daily_prices",
+        fake_fetch,
+    )
+    response = TestClient(app).get("/prices/live/MSFT?range=1M")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["ticker"] == "MSFT"
+    assert payload["range"] == "1M"
+    assert len(payload["prices"]) == 22
+    assert payload["prices"][0]["close"] > 0
+
+
 def test_walk_forward_backtest_returns_model_and_baselines():
     results = walk_forward_backtest(synthetic_prices(220), min_train_rows=80)
 
-    assert set(results) == {"model", "previous_day", "buy_and_hold"}
+    assert set(results) == {
+        "model",
+        "previous_day",
+        "buy_and_hold",
+        "five_day_model",
+        "direction_classifier",
+    }
     assert all(result.observations > 0 for result in results.values())
     assert all(0 <= result.directional_accuracy <= 1 for result in results.values())
     assert all(result.cumulative_return > -1 for result in results.values())
+    assert all(result.annualized_volatility >= 0 for result in results.values())
+    assert results["direction_classifier"].brier_score is not None
+    assert 0 <= results["direction_classifier"].brier_score <= 1
+    assert all(result.max_drawdown <= 0 for result in results.values())
 
 
 def test_multi_backtest_endpoint_aggregates_tickers(monkeypatch):
@@ -89,3 +133,4 @@ def test_multi_backtest_endpoint_aggregates_tickers(monkeypatch):
     assert payload["period"] == "1y"
     assert set(payload["results"]) == {"SPY", "QQQ"}
     assert payload["summary"]["model"]["tickers_evaluated"] == 2
+    assert payload["summary"]["model"]["average_annualized_volatility"] >= 0

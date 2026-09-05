@@ -20,32 +20,42 @@ the implementation status and provides the commands needed to run the project.
   - Fourteen-day RSI.
 - Added a scikit-learn gradient-boosting regression model for next-trading-day
   return estimates.
+- Added a five-trading-day return target to reduce reliance on noisy one-day
+  movement.
+- Added a directional classifier probability and holdout directional-accuracy
+  metric alongside regression metrics.
 - Added chronological holdout validation, confidence scoring, and prediction
   metadata.
 - Added Yahoo Finance daily market-data ingestion through `yfinance`.
+- Switched ingestion to split-adjusted OHLCV history with `auto_adjust=True`.
 - Added the `GET /predict/live/{ticker}` endpoint.
 - Connected the dashboard's **Refresh analysis** button to the live SPY
   prediction endpoint.
+- Added ticker selection with free-form input and popular ticker presets.
+- Connected the selected ticker to live prediction requests and the backtest
+  basket.
 - Added walk-forward backtesting that compares:
   - Hermes model predictions.
   - Previous-day-return baseline.
   - Buy-and-hold baseline.
 - Added backtest metrics for mean absolute error, directional accuracy, and
   cumulative return.
+- Added out-of-sample five-day regression and direction-classifier evaluation,
+  including Brier score, maximum drawdown, and annualized volatility.
 - Added automated tests for feature generation, forecasts, the live endpoint,
   and backtesting.
 - Added multi-ticker, multi-period backtesting through
   `GET /backtest/live?tickers=SPY,QQQ&period=1y`.
+- Added a dashboard model-performance section that loads aggregate and
+  per-ticker backtest results from the batch endpoint.
 - Formatted the frontend with Prettier and the Python code with Black.
 
 ## Remaining work
 
 ### Data and modeling
 
-- Evaluate multiple tickers across one-, three-, and five-year windows.
-- Add maximum drawdown and volatility-adjusted performance metrics.
-- Add five-day and multi-horizon prediction targets.
-- Compare regression against a directional classification model.
+- Calibrate classifier probabilities and compare model performance across more
+  market regimes.
 - Add model versioning, experiment tracking, and persisted trained models.
 - Add data caching and rate-limit handling for the market-data provider.
 - Replace the initial zero-key provider with a licensed production market-data
@@ -53,8 +63,6 @@ the implementation status and provides the commands needed to run the project.
 
 ### Product features
 
-- Add ticker selection to the dashboard instead of using a fixed SPY symbol.
-- Display backtest results in a dedicated model-performance view.
 - Replace representative news cards with a news ingestion and sentiment
   pipeline.
 - Add public trader and institutional-flow data as model features.

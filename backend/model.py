@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import HistGradientBoostingRegressor
+from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -37,6 +38,26 @@ class Forecast:
     training_rows: int
     metrics: dict[str, float]
     feature_snapshot: dict[str, float]
+    five_day_return: float
+    five_day_direction: str
+    direction_probability: float
+
+
+def _regression_model() -> Pipeline:
+    return Pipeline(
+        [
+            ("scale", StandardScaler()),
+            (
+                "regressor",
+                HistGradientBoostingRegressor(
+                    max_iter=150,
+                    learning_rate=0.05,
+                    max_leaf_nodes=15,
+                    random_state=42,
+                ),
+            ),
+        ]
+    )
 
 
 def _validate_prices(prices: pd.DataFrame) -> pd.DataFrame:
@@ -61,9 +82,7 @@ def _validate_prices(prices: pd.DataFrame) -> pd.DataFrame:
     return frame.reset_index(drop=True)
 
 
-def build_features(prices: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
-    """Build features using only information available before the next close."""
-    frame = _validate_prices(prices)
+def _build_feature_frame(frame: pd.DataFrame) -> pd.DataFrame:
     close = frame["close"]
     returns = close.pct_change()
     features = pd.DataFrame(index=frame.index)
@@ -81,12 +100,28 @@ def build_features(prices: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
     relative_strength = gains / losses.replace(0, np.nan)
     features["rsi_14"] = 100 - (100 / (1 + relative_strength))
     features["rsi_14"] = features["rsi_14"].fillna(50)
+    return features.replace([np.inf, -np.inf], np.nan)
+
+
+def build_features(prices: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
+    """Build training features using only information before the next close."""
+    frame = _validate_prices(prices)
+    features = _build_feature_frame(frame)
+    close = frame["close"]
     target = close.shift(-1) / close - 1
-    usable = (
-        features.join(target.rename("target"))
-        .replace([np.inf, -np.inf], np.nan)
-        .dropna()
-    )
+    usable = features.join(target.rename("target")).dropna()
+    return usable[FEATURE_COLUMNS], usable["target"]
+
+
+def _training_data(
+    frame: pd.DataFrame,
+    horizon: int,
+) -> tuple[pd.DataFrame, pd.Series]:
+    """Create feature rows whose forward return is known."""
+    features = _build_feature_frame(frame)
+    close = frame["close"]
+    target = close.shift(-horizon) / close - 1
+    usable = features.join(target.rename("target")).dropna()
     return usable[FEATURE_COLUMNS], usable["target"]
 
 
@@ -100,28 +135,31 @@ def _confidence(predicted_return: float, validation_error: float) -> float:
 
 def forecast(prices: pd.DataFrame) -> Forecast:
     """Train on historical rows and forecast the next trading-day return."""
-    features, target = build_features(prices)
+    frame = _validate_prices(prices)
+    all_features = _build_feature_frame(frame)
+    features, target = _training_data(frame, horizon=1)
+    five_day_features, five_day_target = _training_data(frame, horizon=5)
     if len(features) < 40:
         raise InsufficientHistoryError("At least 40 usable feature rows are required.")
+    inference_features = all_features.iloc[[-1]][FEATURE_COLUMNS]
+    if inference_features.isna().any().any():
+        raise InsufficientHistoryError(
+            "The latest price row does not have enough history for features."
+        )
 
     split = max(30, int(len(features) * 0.8))
     if split >= len(features):
         split = len(features) - 1
-    model = Pipeline(
-        [
-            ("scale", StandardScaler()),
-            (
-                "regressor",
-                HistGradientBoostingRegressor(
-                    max_iter=150, learning_rate=0.05, max_leaf_nodes=15, random_state=42
-                ),
-            ),
-        ]
-    )
+    model = _regression_model()
     model.fit(features.iloc[:split], target.iloc[:split])
     validation_prediction = model.predict(features.iloc[split:])
     validation_error = float(
         mean_absolute_error(target.iloc[split:], validation_prediction)
+    )
+    directional_accuracy = float(
+        (
+            np.sign(target.iloc[split:].to_numpy()) == np.sign(validation_prediction)
+        ).mean()
     )
     r2 = (
         float(r2_score(target.iloc[split:], validation_prediction))
@@ -130,8 +168,20 @@ def forecast(prices: pd.DataFrame) -> Forecast:
     )
 
     model.fit(features, target)
-    predicted_return = float(model.predict(features.iloc[[-1]])[0])
-    last_close = float(_validate_prices(prices)["close"].iloc[-1])
+    predicted_return = float(model.predict(inference_features)[0])
+    last_close = float(frame["close"].iloc[-1])
+    five_day_model = _regression_model()
+    five_day_model.fit(five_day_features, five_day_target)
+    five_day_return = float(five_day_model.predict(inference_features)[0])
+
+    classifier = HistGradientBoostingClassifier(
+        max_iter=150,
+        learning_rate=0.05,
+        max_leaf_nodes=15,
+        random_state=42,
+    )
+    classifier.fit(features, (target > 0).astype(int))
+    five_day_probability = float(classifier.predict_proba(inference_features)[0, 1])
     expected_price = last_close * (1 + predicted_return)
     direction = (
         "up"
@@ -144,8 +194,20 @@ def forecast(prices: pd.DataFrame) -> Forecast:
         direction=direction,
         confidence=_confidence(predicted_return, validation_error),
         training_rows=len(features),
-        metrics={"mae": round(validation_error, 6), "r2": round(r2, 4)},
-        feature_snapshot={
-            key: round(float(features.iloc[-1][key]), 6) for key in FEATURE_COLUMNS
+        metrics={
+            "mae": round(validation_error, 6),
+            "r2": round(r2, 4),
+            "directional_accuracy": round(directional_accuracy, 4),
         },
+        feature_snapshot={
+            key: round(float(inference_features.iloc[0][key]), 6)
+            for key in FEATURE_COLUMNS
+        },
+        five_day_return=round(five_day_return, 6),
+        five_day_direction=(
+            "up"
+            if five_day_return > 0.005
+            else "down" if five_day_return < -0.005 else "flat"
+        ),
+        direction_probability=round(five_day_probability, 3),
     )

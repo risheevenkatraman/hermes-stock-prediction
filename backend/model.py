@@ -6,8 +6,10 @@ from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import HistGradientBoostingRegressor
-from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.ensemble import (
+    HistGradientBoostingClassifier,
+    HistGradientBoostingRegressor,
+)
 from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
@@ -186,7 +188,9 @@ def forecast(prices: pd.DataFrame) -> Forecast:
     direction = (
         "up"
         if predicted_return > 0.002
-        else "down" if predicted_return < -0.002 else "flat"
+        else "down"
+        if predicted_return < -0.002
+        else "flat"
     )
     return Forecast(
         predicted_return=round(predicted_return, 6),
@@ -207,7 +211,9 @@ def forecast(prices: pd.DataFrame) -> Forecast:
         five_day_direction=(
             "up"
             if five_day_return > 0.005
-            else "down" if five_day_return < -0.005 else "flat"
+            else "down"
+            if five_day_return < -0.005
+            else "flat"
         ),
         direction_probability=round(five_day_probability, 3),
     )

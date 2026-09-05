@@ -34,6 +34,8 @@ the implementation status and provides the commands needed to run the project.
   cumulative return.
 - Added automated tests for feature generation, forecasts, the live endpoint,
   and backtesting.
+- Added multi-ticker, multi-period backtesting through
+  `GET /backtest/live?tickers=SPY,QQQ&period=1y`.
 - Formatted the frontend with Prettier and the Python code with Black.
 
 ## Remaining work
@@ -110,6 +112,7 @@ The API runs at `http://localhost:8000`.
 - Manual prediction: `POST /predict`
 - Live prediction: `GET /predict/live/{ticker}`
 - Live backtest: `GET /backtest/live/{ticker}`
+- Multi-ticker backtest: `GET /backtest/live?tickers=SPY,QQQ&period=5y`
 - Interactive API docs: `http://localhost:8000/docs`
 
 ### 4. Open the dashboard

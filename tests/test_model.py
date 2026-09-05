@@ -68,3 +68,24 @@ def test_walk_forward_backtest_returns_model_and_baselines():
     assert all(result.observations > 0 for result in results.values())
     assert all(0 <= result.directional_accuracy <= 1 for result in results.values())
     assert all(result.cumulative_return > -1 for result in results.values())
+
+
+def test_multi_backtest_endpoint_aggregates_tickers(monkeypatch):
+    from backend import main
+
+    def fake_fetch(*args, **kwargs):
+        del args, kwargs
+        return synthetic_prices(220)
+
+    monkeypatch.setattr(
+        main,
+        "fetch_daily_prices",
+        fake_fetch,
+    )
+    response = TestClient(app).get("/backtest/live?tickers=SPY,QQQ&period=1y")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["period"] == "1y"
+    assert set(payload["results"]) == {"SPY", "QQQ"}
+    assert payload["summary"]["model"]["tickers_evaluated"] == 2

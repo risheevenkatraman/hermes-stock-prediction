@@ -1094,3 +1094,280 @@ footer a {
     font-size: 9px;
   }
 }
+
+/* Hermes theme: warm marble, parchment, and brass accents. */
+:root {
+  --bg: #f5f1e8;
+  --panel: #fffdf8;
+  --panel2: #f8f3e9;
+  --line: #ddd2bf;
+  --text: #2c2923;
+  --muted: #756d61;
+  --purple: #a87825;
+  --green: #2e8668;
+  --red: #bd5b4c;
+  --amber: #b27a24;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.sidebar {
+  background: #eee5d5;
+  border-right-color: #d9cbb4;
+}
+
+.brand,
+.mobile-brand {
+  color: #2c2923;
+}
+
+.brand-mark,
+.nav-item.active .nav-icon,
+.welcome-row h1 span,
+.edit-budget,
+.see-all,
+.forecast-icon {
+  color: var(--purple);
+}
+
+.workspace-label,
+.eyebrow,
+.ticker-controls label,
+.metric-top,
+.chart-labels {
+  color: #8b7d68;
+}
+
+.nav-item {
+  color: #776e60;
+}
+
+.nav-item:hover,
+.nav-item.active {
+  color: #2c2923;
+  background: #e1d4bd;
+}
+
+.nav-icon,
+.more,
+.market-open,
+.icon-button {
+  color: #8d806e;
+}
+
+.nav-count {
+  color: #75591f;
+  background: #dcc89e;
+}
+
+.model-status,
+.user-card {
+  border-color: #d9cbb4;
+}
+
+.model-status small,
+.user-card small,
+.subtitle,
+.metric-foot,
+.panel-subtitle,
+.signal-main p,
+.performance-note {
+  color: #817668;
+}
+
+.topbar {
+  border-bottom-color: #ded3c1;
+}
+
+.button.primary {
+  background: #a87825;
+  box-shadow: 0 5px 18px rgba(168, 120, 37, 0.22);
+}
+
+.button.secondary,
+.secondary {
+  background: #e5d7bd;
+  color: #5d4b2d;
+}
+
+.ticker-controls .secondary {
+  width: auto;
+  margin-top: 0;
+  text-align: center;
+}
+
+.ticker-controls input {
+  border-color: #cdbd9f;
+  background: #fffdf8;
+  color: #2c2923;
+}
+
+.ticker-controls input:focus,
+.ticker-preset:hover,
+.ticker-preset.active {
+  border-color: #a87825;
+}
+
+.ticker-preset {
+  border-color: #d4c6ae;
+  background: #f8f3e9;
+  color: #806f58;
+}
+
+.metric-card,
+.panel {
+  background: var(--panel);
+  border-color: #ded3c1;
+  box-shadow: 0 8px 24px rgba(106, 83, 45, 0.06);
+}
+
+.metric-foot strong,
+.performance-ticker strong {
+  color: #514838;
+}
+
+.meter {
+  background: #e7dece;
+}
+
+.range-tabs {
+  background: #eee5d5;
+}
+
+.range {
+  color: #887963;
+}
+
+.range.active {
+  background: #c69b50;
+  color: #fffdf8;
+}
+
+.price-label,
+.confidence,
+.chart-wrap text {
+  color: #857765;
+}
+
+.confidence strong {
+  color: #a87825;
+}
+
+.grid-lines line {
+  stroke: #e4dac9;
+}
+
+.chart-line {
+  stroke: #b17b27;
+}
+
+.chart-point {
+  fill: #b17b27;
+  stroke: #f3dfb5;
+}
+
+.today-line {
+  stroke: #b9a689;
+}
+
+.forecast-callout {
+  border-color: #dfcda9;
+  background: #fbf5e8;
+}
+
+.forecast-callout p,
+.methodology > p:not(.eyebrow),
+.method-item small {
+  color: #817668;
+}
+
+.forecast-callout b {
+  color: #6e5424;
+}
+
+.signal,
+.stock-row,
+.performance-tickers,
+.performance-ticker,
+.method-item,
+.performance-stat {
+  border-color: #e5dccd;
+}
+
+.asset small,
+.signal-time,
+.table-head,
+.performance-tickers-head {
+  color: #8a7d6b;
+}
+
+.view-pill.bullish,
+.trend-badge.positive {
+  background: rgba(46, 134, 104, 0.11);
+}
+
+.view-pill.watch,
+.trend-badge.neutral {
+  background: rgba(178, 122, 36, 0.12);
+}
+
+.add-button {
+  border-color: #cdbd9f;
+  color: #8b7654;
+}
+
+.methodology,
+.performance-card {
+  background: #f8f3e9;
+}
+
+.methodology .method-item {
+  border-top-color: #e1d5c1;
+}
+
+.method-icon.news {
+  color: #a87825;
+  background: #efe1c4;
+}
+
+.method-icon.traders {
+  color: #2e8668;
+  background: #dceee6;
+}
+
+.method-icon.price {
+  color: #bd704b;
+  background: #f1dfd2;
+}
+
+.performance-card {
+  border-color: #ded3c1;
+}
+
+.performance-card.featured {
+  border-color: #c69b50;
+}
+
+.performance-stat strong {
+  color: #514838;
+}
+
+.performance-empty {
+  border-color: #d4c6ae;
+  color: #6f6252;
+}
+
+.toast {
+  background: #fffaf0;
+  border-color: #d4bc88;
+  color: #514838;
+  box-shadow: 0 8px 24px rgba(106, 83, 45, 0.12);
+}
+
+footer,
+footer a {
+  color: #8b7d6b;
+}

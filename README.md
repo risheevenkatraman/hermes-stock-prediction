@@ -48,6 +48,15 @@ the implementation status and provides the commands needed to run the project.
   `GET /backtest/live?tickers=SPY,QQQ&period=1y`.
 - Added a dashboard model-performance section that loads aggregate and
   per-ticker backtest results from the batch endpoint.
+- Added a deterministic PyTorch neural regressor over the existing price
+  features. Live forecasts now expose both the neural prediction and a
+  validation-gated statistical-neural hybrid prediction; the response also
+  includes held-out neural validation metrics.
+- Added out-of-sample walk-forward metrics for the statistical, deep-learning,
+  and hybrid strategies so blend quality is measured on unseen observations.
+- The hybrid uses the neural model only when its chronological validation MAE
+  beats the statistical model for that training window; otherwise it falls
+  back to the statistical forecast.
 - Formatted the frontend with Prettier and the Python code with Black.
 
 ## Remaining work

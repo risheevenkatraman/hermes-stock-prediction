@@ -14,6 +14,8 @@ from sklearn.metrics import mean_absolute_error, r2_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from .deep_model import predict_return
+
 FEATURE_COLUMNS = [
     "return_1d",
     "return_5d",
@@ -43,6 +45,8 @@ class Forecast:
     five_day_return: float
     five_day_direction: str
     direction_probability: float
+    deep_predicted_return: float
+    hybrid_predicted_return: float
 
 
 def _regression_model() -> Pipeline:
@@ -170,7 +174,12 @@ def forecast(prices: pd.DataFrame) -> Forecast:
     )
 
     model.fit(features, target)
-    predicted_return = float(model.predict(inference_features)[0])
+    statistical_return = float(model.predict(inference_features)[0])
+    deep_result = predict_return(features, target, inference_features)
+    deep_weight = 0.3 if deep_result.validation_mae < validation_error else 0.0
+    predicted_return = (
+        1 - deep_weight
+    ) * statistical_return + deep_weight * deep_result.predicted_return
     last_close = float(frame["close"].iloc[-1])
     five_day_model = _regression_model()
     five_day_model.fit(five_day_features, five_day_target)
@@ -188,9 +197,7 @@ def forecast(prices: pd.DataFrame) -> Forecast:
     direction = (
         "up"
         if predicted_return > 0.002
-        else "down"
-        if predicted_return < -0.002
-        else "flat"
+        else "down" if predicted_return < -0.002 else "flat"
     )
     return Forecast(
         predicted_return=round(predicted_return, 6),
@@ -200,6 +207,12 @@ def forecast(prices: pd.DataFrame) -> Forecast:
         training_rows=len(features),
         metrics={
             "mae": round(validation_error, 6),
+            "statistical_mae": round(validation_error, 6),
+            "deep_mae": round(deep_result.validation_mae, 6),
+            "deep_directional_accuracy": round(
+                deep_result.validation_directional_accuracy, 4
+            ),
+            "deep_weight": deep_weight,
             "r2": round(r2, 4),
             "directional_accuracy": round(directional_accuracy, 4),
         },
@@ -211,9 +224,9 @@ def forecast(prices: pd.DataFrame) -> Forecast:
         five_day_direction=(
             "up"
             if five_day_return > 0.005
-            else "down"
-            if five_day_return < -0.005
-            else "flat"
+            else "down" if five_day_return < -0.005 else "flat"
         ),
         direction_probability=round(five_day_probability, 3),
+        deep_predicted_return=round(deep_result.predicted_return, 6),
+        hybrid_predicted_return=round(predicted_return, 6),
     )

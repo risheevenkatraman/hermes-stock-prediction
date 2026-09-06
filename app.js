@@ -52,7 +52,7 @@ async function refreshLivePrediction() {
     document.querySelector(".confidence").innerHTML =
       `Current price <strong id="currentPrice">${formatPrice(payload.market_data.latest_price)}</strong>`;
     document.querySelector(".forecast-callout strong").textContent =
-      `Model forecast: ${payload.direction === "up" ? "continued upside" : payload.direction === "down" ? "downside pressure" : "range-bound movement"}`;
+      `Hybrid model forecast: ${payload.direction === "up" ? "continued upside" : payload.direction === "down" ? "downside pressure" : "range-bound movement"}`;
     document.querySelector(".forecast-callout p").innerHTML =
       `Forecast price <b>${formatPrice(payload.expected_price)}</b> (${(payload.predicted_return * 100).toFixed(2)}%). Current price ${formatPrice(payload.market_data.latest_price)} as of ${payload.market_data.as_of}.`;
     await loadTrendChart(selectedRange);

@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import brier_score_loss, mean_absolute_error
 
+from .deep_model import predict_return
 from .model import _regression_model, _training_data, _validate_prices
 
 
@@ -115,6 +116,8 @@ def walk_forward_backtest(
         raise ValueError("More history is required for the requested backtest window.")
 
     model_predictions: list[float] = []
+    deep_predictions: list[float] = []
+    hybrid_predictions: list[float] = []
     one_day_actual: list[float] = []
     baseline_predictions: list[float] = []
     five_day_predictions: list[float] = []
@@ -124,9 +127,40 @@ def walk_forward_backtest(
 
     for index in range(min_train_rows, len(five_day_features), step):
         one_day_model = _regression_model()
+        validation_start = max(30, int(index * 0.8))
+        validation_model = _regression_model()
+        validation_model.fit(
+            one_day_features.iloc[:validation_start],
+            one_day_target.iloc[:validation_start],
+        )
+        statistical_validation_prediction = validation_model.predict(
+            one_day_features.iloc[validation_start:index]
+        )
+        statistical_validation_mae = float(
+            np.mean(
+                np.abs(
+                    one_day_target.iloc[validation_start:index].to_numpy()
+                    - statistical_validation_prediction
+                )
+            )
+        )
         one_day_model.fit(one_day_features.iloc[:index], one_day_target.iloc[:index])
-        model_predictions.append(
-            float(one_day_model.predict(one_day_features.iloc[[index]])[0])
+        one_day_prediction = float(
+            one_day_model.predict(one_day_features.iloc[[index]])[0]
+        )
+        deep_result = predict_return(
+            one_day_features.iloc[:index],
+            one_day_target.iloc[:index],
+            one_day_features.iloc[[index]],
+        )
+        deep_weight = (
+            0.3 if deep_result.validation_mae < statistical_validation_mae else 0.0
+        )
+        model_predictions.append(one_day_prediction)
+        deep_predictions.append(deep_result.predicted_return)
+        hybrid_predictions.append(
+            (1 - deep_weight) * one_day_prediction
+            + deep_weight * deep_result.predicted_return
         )
         one_day_actual.append(float(one_day_target.iloc[index]))
         baseline_predictions.append(float(one_day_features.iloc[index]["return_1d"]))
@@ -152,6 +186,10 @@ def walk_forward_backtest(
 
     actual = pd.Series(one_day_actual)
     model_metrics = _metrics("Hermes model", actual, np.array(model_predictions))
+    deep_metrics = _metrics("Hermes deep model", actual, np.array(deep_predictions))
+    hybrid_metrics = _metrics(
+        "Hermes hybrid model", actual, np.array(hybrid_predictions)
+    )
     previous_day_metrics = _metrics(
         "Previous-day return", actual, np.array(baseline_predictions)
     )
@@ -183,6 +221,8 @@ def walk_forward_backtest(
     )
     return {
         "model": model_metrics,
+        "deep_model": deep_metrics,
+        "hybrid_model": hybrid_metrics,
         "previous_day": previous_day_metrics,
         "buy_and_hold": buy_hold,
         "five_day_model": five_day_metrics,

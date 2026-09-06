@@ -65,6 +65,14 @@ def predict(request: PredictionRequest) -> dict:
             "direction": result.five_day_direction,
         },
         "direction_probability": result.direction_probability,
+        "deep_learning": {
+            "predicted_return": result.deep_predicted_return,
+            "validation_mae": result.metrics["deep_mae"],
+            "validation_directional_accuracy": result.metrics[
+                "deep_directional_accuracy"
+            ],
+        },
+        "hybrid_predicted_return": result.hybrid_predicted_return,
         "disclaimer": "Educational estimate, not financial advice.",
     }
 
@@ -94,6 +102,14 @@ def predict_live(ticker: str) -> dict:
             "direction": result.five_day_direction,
         },
         "direction_probability": result.direction_probability,
+        "deep_learning": {
+            "predicted_return": result.deep_predicted_return,
+            "validation_mae": result.metrics["deep_mae"],
+            "validation_directional_accuracy": result.metrics[
+                "deep_directional_accuracy"
+            ],
+        },
+        "hybrid_predicted_return": result.hybrid_predicted_return,
         "market_data": metadata,
         "disclaimer": "Educational estimate, not financial advice.",
     }

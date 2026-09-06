@@ -50,6 +50,10 @@ def test_forecast_returns_bounded_prediction_and_validation_metrics():
     assert result.five_day_direction in {"up", "down", "flat"}
     assert -1 < result.five_day_return < 1
     assert 0 <= result.direction_probability <= 1
+    assert -1 < result.deep_predicted_return < 1
+    assert result.hybrid_predicted_return == result.predicted_return
+    assert result.metrics["deep_mae"] >= 0
+    assert 0 <= result.metrics["deep_directional_accuracy"] <= 1
 
 
 def test_forecast_uses_latest_price_row_for_inference_features():
@@ -71,6 +75,8 @@ def test_live_prediction_endpoint_uses_ingested_history(monkeypatch):
     assert payload["ticker"] == "MSFT"
     assert payload["market_data"]["latest_price"] > 0
     assert payload["market_data"]["as_of"] == "2025-05-20"
+    assert "deep_learning" in payload
+    assert "hybrid_predicted_return" in payload
 
 
 def test_live_prices_endpoint_returns_selected_chart_window(monkeypatch):
@@ -100,6 +106,8 @@ def test_walk_forward_backtest_returns_model_and_baselines():
 
     assert set(results) == {
         "model",
+        "deep_model",
+        "hybrid_model",
         "previous_day",
         "buy_and_hold",
         "five_day_model",
@@ -112,6 +120,7 @@ def test_walk_forward_backtest_returns_model_and_baselines():
     assert results["direction_classifier"].brier_score is not None
     assert 0 <= results["direction_classifier"].brier_score <= 1
     assert all(result.max_drawdown <= 0 for result in results.values())
+    assert results["hybrid_model"].mae >= 0
 
 
 def test_multi_backtest_endpoint_aggregates_tickers(monkeypatch):

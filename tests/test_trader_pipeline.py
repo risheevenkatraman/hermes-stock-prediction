@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import datetime, timedelta
 
 from fastapi.testclient import TestClient
 
@@ -42,7 +42,7 @@ def test_normalize_records_accepts_common_vendor_fields():
 
 
 def test_recommendations_prioritize_recent_consensus_and_keep_model_optional():
-    recent = date.today() - timedelta(days=1)
+    recent = datetime.now(tz=datetime.timezone.utc).date() - timedelta(days=1)
     records = [
         TraderTrade("quiver_quantitative", "A", "NVDA", "buy", recent.isoformat(), 0.2),
         TraderTrade("stockcircle", "B", "NVDA", "buy", recent.isoformat(), 0.3),
@@ -69,7 +69,7 @@ def test_recommendations_endpoint_serializes_cached_records(monkeypatch):
             "A",
             "MSFT",
             "buy",
-            date.today().isoformat(),
+            datetime.now(tz=datetime.timezone.utc).date().isoformat(),
             0.1,
         )
     ]

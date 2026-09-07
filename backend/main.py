@@ -1,7 +1,10 @@
-"""FastAPI entry point for Hermes price trend predictions."""
+"""FastAPI entry point for Hermes price and trader-flow predictions."""
 
 from __future__ import annotations
 
+import asyncio
+import os
+from contextlib import asynccontextmanager, suppress
 from typing import Annotated
 
 import pandas as pd
@@ -12,8 +15,30 @@ from pydantic import BaseModel, Field
 from .backtest import serialize_metrics, walk_forward_backtest
 from .data import MarketDataError, fetch_daily_prices, latest_market_metadata
 from .model import InsufficientHistoryError, forecast
+from .trader_pipeline import build_recommendations, pipeline
 
-app = FastAPI(title="Hermes Prediction API", version="0.1.0")
+
+async def _scheduled_trader_refresh() -> None:
+    interval_minutes = float(os.getenv("TRADER_REFRESH_INTERVAL_MINUTES", "0"))
+    if interval_minutes <= 0:
+        return
+    while True:
+        await asyncio.to_thread(pipeline.refresh)
+        await asyncio.sleep(interval_minutes * 60)
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    refresh_task = asyncio.create_task(_scheduled_trader_refresh())
+    try:
+        yield
+    finally:
+        refresh_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await refresh_task
+
+
+app = FastAPI(title="Hermes Prediction API", version="0.2.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://localhost:5173", "null"],
@@ -39,6 +64,71 @@ class PredictionRequest(BaseModel):
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "hermes-prediction-api"}
+
+
+@app.get("/trader-pipeline/status")
+def trader_pipeline_status() -> dict[str, object]:
+    """Report configured sources and the last normalized refresh."""
+    return pipeline.status()
+
+
+@app.post("/trader-pipeline/refresh")
+def refresh_trader_pipeline() -> dict[str, object]:
+    """Fetch and normalize the latest records from configured providers."""
+    records = pipeline.refresh()
+    return {
+        "refreshed_at": pipeline.last_refresh,
+        "records": len(records),
+        "status": pipeline.status(),
+        "disclaimer": "Trader disclosures can be delayed or incomplete.",
+    }
+
+
+@app.get("/recommendations/live")
+def recommendations_live(
+    refresh: bool = Query(default=True),
+    include_price_model: bool = Query(default=True),
+    limit: int = Query(default=20, ge=1, le=100),
+) -> dict[str, object]:
+    """Return current recency-weighted trader recommendations."""
+    if refresh or not pipeline.records:
+        pipeline.refresh()
+    if not pipeline.records:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "message": "No trader records are available.",
+                "configure": [
+                    "QUIVER_QUANT_API_URL and QUIVER_QUANT_API_KEY",
+                    "STOCKCIRCLE_API_URL and STOCKCIRCLE_API_KEY",
+                    "TRADINGVIEW_API_URL and TRADINGVIEW_API_KEY",
+                ],
+                "provider_errors": pipeline.provider_errors,
+            },
+        )
+    recommendations = build_recommendations(
+        pipeline.records,
+        include_price_model=include_price_model,
+        limit=limit,
+    )
+    return {
+        "updated_at": pipeline.last_refresh,
+        "recommendations": [
+            {
+                "ticker": item.ticker,
+                "action": item.action,
+                "score": item.score,
+                "trader_signal": item.trader_signal,
+                "trader_return": item.trader_return,
+                "trader_count": item.trader_count,
+                "sources": item.sources,
+                "recent_trades": item.recent_trades,
+                "price_forecast": item.price_forecast,
+            }
+            for item in recommendations
+        ],
+        "disclaimer": "Educational estimate, not financial advice. Disclosed trades may be delayed.",
+    }
 
 
 @app.post("/predict")

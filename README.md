@@ -52,6 +52,13 @@ the implementation status and provides the commands needed to run the project.
   features. Live forecasts now expose both the neural prediction and a
   validation-gated statistical-neural hybrid prediction; the response also
   includes held-out neural validation metrics.
+- Added a refreshable trader-flow pipeline that normalizes Quiver Quantitative,
+  Stockcircle, and TradingView records, weights recent buy/sell consensus and
+  reported trader returns, and optionally blends the existing price model into
+  recommendations.
+- Added `/trader-pipeline/status`, `/trader-pipeline/refresh`, and
+  `/recommendations/live` endpoints. Set
+  `TRADER_REFRESH_INTERVAL_MINUTES` to enable in-process periodic refreshes.
 - Added out-of-sample walk-forward metrics for the statistical, deep-learning,
   and hybrid strategies so blend quality is measured on unseen observations.
 - The hybrid uses the neural model only when its chronological validation MAE
@@ -87,6 +94,8 @@ backend/
   data.py           Market-data provider adapter
   main.py           FastAPI routes and request validation
   model.py          Feature engineering and forecasting model
+  trader_pipeline.py
+                    Provider adapters, normalization, scoring, and refresh state
 tests/
   test_model.py     Prediction and backtest tests
 app.js              Dashboard interactions and API integration
@@ -128,6 +137,9 @@ The API runs at `http://localhost:8000`.
 - Health check: `GET /health`
 - Manual prediction: `POST /predict`
 - Live prediction: `GET /predict/live/{ticker}`
+- Trader pipeline status: `GET /trader-pipeline/status`
+- Refresh trader records: `POST /trader-pipeline/refresh`
+- Recommendations: `GET /recommendations/live`
 - Live backtest: `GET /backtest/live/{ticker}`
 - Multi-ticker backtest: `GET /backtest/live?tickers=SPY,QQQ&period=5y`
 - Interactive API docs: `http://localhost:8000/docs`
@@ -144,6 +156,27 @@ npx serve .
 With the API running, click **Refresh analysis** in the dashboard to fetch
 current SPY history and run a live prediction.
 
+### Trader-flow provider configuration
+
+The provider adapters are intentionally disabled until their licensed
+endpoints are configured. Use the endpoint and credentials supplied by each
+vendor; Hermes does not scrape private pages or ship credentials:
+
+```text
+QUIVER_QUANT_API_URL=...
+QUIVER_QUANT_API_KEY=...
+STOCKCIRCLE_API_URL=...
+STOCKCIRCLE_API_KEY=...
+TRADINGVIEW_API_URL=...
+TRADINGVIEW_API_KEY=...
+TRADER_REFRESH_INTERVAL_MINUTES=60
+```
+
+Each response should be a JSON list, or an object containing `data`, `results`,
+or `trades`. Records should include a ticker/symbol, action/type, and date;
+trader/investor and reported return/performance fields are used when present.
+TradingView data must come from an account-approved export or API endpoint.
+
 ### 5. Run tests
 
 ```bash
@@ -152,8 +185,10 @@ python -m pytest tests -q
 
 ## Current limitations
 
-The current forecast is an educational research feature, not financial advice.
-The model uses price and volume history only; news sentiment and trader-flow
-data are not yet connected. Yahoo Finance is suitable for this development
-stage, but production use requires a provider with appropriate licensing,
-availability guarantees, and data-quality monitoring.
+The current forecast and trader recommendations are educational research
+features, not financial advice. Disclosed trades can be delayed, incomplete,
+or survivorship-biased, and the pipeline does not infer that a trader will
+repeat past returns. Yahoo Finance and configured trader providers are suitable
+for this development stage, but production use requires appropriate licensing,
+availability guarantees, credential storage, caching, and data-quality
+monitoring.

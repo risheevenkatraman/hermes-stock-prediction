@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import secrets
 from contextlib import asynccontextmanager, suppress
 from typing import Annotated
 from pathlib import Path
@@ -11,7 +12,7 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -46,15 +47,43 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="Hermes Prediction API", version="0.2.0", lifespan=lifespan)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+
+
+def require_admin(request: Request) -> None:
+    """Local development stays open; deployed administrative work requires a token."""
+    if os.getenv("HERMES_DEPLOYMENT", "local") != "production":
+        return
+    token = os.getenv("HERMES_ADMIN_TOKEN", "")
+    supplied = request.headers.get("X-Hermes-Admin-Token", "")
+    if not token or not secrets.compare_digest(supplied.encode(), token.encode()):
+        raise HTTPException(
+            status_code=403,
+            detail="This operation requires server administrator access. "
+            "Use an authenticated admin API request; browser accounts are not available yet.",
+        )
+
+
+def cors_origins() -> list[str]:
+    if "CORS_ORIGINS" in os.environ:
+        return [
+            origin.strip()
+            for origin in os.environ["CORS_ORIGINS"].split(",")
+            if origin.strip()
+        ]
+    if os.getenv("HERMES_DEPLOYMENT", "local") == "production":
+        return []
+    return [
         "http://localhost:3000",
         "http://localhost:5173",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
         "null",
-    ],
+    ]
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins(),
     allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
@@ -71,7 +100,7 @@ class PriceRow(BaseModel):
 
 class PredictionRequest(BaseModel):
     ticker: str = Field(min_length=1, max_length=10, pattern=r"^[A-Za-z0-9.-]+$")
-    prices: Annotated[list[PriceRow], Field(min_length=60)]
+    prices: Annotated[list[PriceRow], Field(min_length=60, max_length=10000)]
 
 
 @app.get("/health")
@@ -85,7 +114,7 @@ def trader_pipeline_status() -> dict[str, object]:
     return pipeline.status()
 
 
-@app.post("/trader-pipeline/refresh")
+@app.post("/trader-pipeline/refresh", dependencies=[Depends(require_admin)])
 def refresh_trader_pipeline() -> dict[str, object]:
     """Fetch and normalize the latest records from configured providers."""
     records = pipeline.refresh()
@@ -99,12 +128,14 @@ def refresh_trader_pipeline() -> dict[str, object]:
 
 @app.get("/recommendations/live")
 def recommendations_live(
+    request: Request,
     refresh: bool = Query(default=True),
     include_price_model: bool = Query(default=True),
     limit: int = Query(default=20, ge=1, le=100),
 ) -> dict[str, object]:
     """Return current recency-weighted trader recommendations."""
     if refresh or not pipeline.records:
+        require_admin(request)
         pipeline.refresh()
     if not pipeline.records:
         raise HTTPException(
@@ -267,7 +298,7 @@ def prices_live(
     }
 
 
-@app.get("/backtest/live/{ticker}")
+@app.get("/backtest/live/{ticker}", dependencies=[Depends(require_admin)])
 def backtest_live(ticker: str) -> dict:
     """Evaluate the model and benchmarks against the latest daily history."""
     try:
@@ -284,7 +315,7 @@ def backtest_live(ticker: str) -> dict:
     }
 
 
-@app.get("/backtest/live")
+@app.get("/backtest/live", dependencies=[Depends(require_admin)])
 def backtest_multiple(
     tickers: str = Query(
         default="SPY,QQQ,AAPL,MSFT,NVDA,AMZN,TSLA",
@@ -391,7 +422,7 @@ class NewsImportRequest(BaseModel):
     articles: Annotated[list[NewsInput], Field(min_length=1, max_length=5000)]
 
 
-@app.post("/news/import")
+@app.post("/news/import", dependencies=[Depends(require_admin)])
 def import_news(request: NewsImportRequest) -> dict:
     """Import scored articles. Omitted availability means first observed now."""
     now = datetime.now(timezone.utc)
@@ -414,7 +445,7 @@ def import_news(request: NewsImportRequest) -> dict:
     }
 
 
-@app.post("/news/refresh/{ticker}")
+@app.post("/news/refresh/{ticker}", dependencies=[Depends(require_admin)])
 def refresh_news(
     ticker: str, time_from: str | None = None, time_to: str | None = None
 ) -> dict:
@@ -444,8 +475,12 @@ def company_news(ticker: str, limit: int = Query(default=20, ge=1, le=100)) -> d
 
 
 @app.get("/predict/direction/live/{ticker}")
-def live_direction(ticker: str, refresh_news_first: bool = False) -> dict:
+def live_direction(
+    ticker: str, request: Request, refresh_news_first: bool = False
+) -> dict:
     """Experimental direction head; news refresh is explicit and never implicit."""
+    if refresh_news_first:
+        require_admin(request)
     try:
         symbol = ticker_symbol(ticker)
         store = NewsStore()
@@ -476,6 +511,11 @@ def frontend_index():
 @app.get("/app.js", include_in_schema=False)
 def frontend_script():
     return FileResponse(_FRONTEND_ROOT / "app.js", media_type="text/javascript")
+
+
+@app.get("/config.js", include_in_schema=False)
+def frontend_config():
+    return FileResponse(_FRONTEND_ROOT / "config.js", media_type="text/javascript")
 
 
 @app.get("/styles.css", include_in_schema=False)

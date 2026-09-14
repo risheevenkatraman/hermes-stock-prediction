@@ -1,3 +1,6 @@
+# Personal documentation stays local; README.md remains tracked.
+/docs/
+
 # Python bytecode and interpreter caches
 __pycache__/
 *.py[cod]
@@ -26,10 +29,13 @@ ENV/
 !.env.example
 !.env.*.example
 !.env.template
+!.env.*.template
 .envrc
 
 # Local AWS credentials and private keys
 .aws/
+.docker/
+*.ppk
 *.pem
 *.key
 *.p12
@@ -51,6 +57,16 @@ data/
 *.sqlite3-wal
 *.sqlite3-shm
 *.sqlite3-journal
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+
+# Local archive backups (uncompressed SQLite backups are covered above)
+/backups/
+*.sqlite.gz
+*.sqlite3.gz
+*.db.gz
 
 # Browser test captures
 tests/browser_artifacts/
@@ -67,6 +83,7 @@ yarn-error.log*
 # Runtime logs
 *.log
 *.log.*
+/logs/
 
 # Personal editor state and operating-system files
 .idea/

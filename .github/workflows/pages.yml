@@ -1,0 +1,51 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - styles.css
+      - app.js
+      - config.js
+      - scripts/build_pages.py
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/configure-pages@v5
+      - name: Build public assets
+        env:
+          PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL }}
+        run: python3 scripts/build_pages.py
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist/pages
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

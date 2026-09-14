@@ -1,0 +1,55 @@
+name: hermes
+
+services:
+  api:
+    build: .
+    image: hermes-api:${HERMES_IMAGE_TAG:-local}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      HERMES_DEPLOYMENT: production
+      HERMES_ADMIN_TOKEN: ${HERMES_ADMIN_TOKEN:?Set HERMES_ADMIN_TOKEN in .env}
+      CORS_ORIGINS: ${CORS_ORIGINS:?Set CORS_ORIGINS in .env}
+      NEWS_DB_PATH: /data/news.sqlite3
+    volumes:
+      - news_data:/data
+    # No host port: public API traffic must pass through HTTPS on Caddy.
+    expose:
+      - "8000"
+    mem_limit: 3g
+    cpus: 2.0
+    pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    environment:
+      API_DOMAIN: ${API_DOMAIN:?Set API_DOMAIN in .env}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  news_data:
+  caddy_data:
+  caddy_config:

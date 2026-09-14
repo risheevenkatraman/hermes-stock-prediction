@@ -68,9 +68,10 @@ function serverURL(value) {
   return url.href.replace(/\/$/, "");
 }
 const defaultAPI =
-  location.protocol === "file:" || ["3000", "5173"].includes(location.port)
+  window.HERMES_CONFIG?.apiBase ||
+  (location.protocol === "file:" || ["3000", "5173"].includes(location.port)
     ? "http://localhost:8000"
-    : location.origin;
+    : location.origin);
 let apiBase;
 try {
   apiBase = serverURL(readStorage("hermes.apiBase.v1", defaultAPI));

@@ -1,0 +1,10 @@
+# Only application inputs enter the Docker build context.
+**
+!Dockerfile
+!requirements.txt
+!backend/
+!backend/*.py
+!index.html
+!styles.css
+!app.js
+!config.js

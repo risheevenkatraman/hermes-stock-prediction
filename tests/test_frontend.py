@@ -50,7 +50,7 @@ def browser_page(frontend_server):
         def route_handler(route):
             parsed = urlsplit(route.request.url)
             path = parsed.path
-            if path in {"/", "/index.html", "/app.js", "/styles.css"}:
+            if path in {"/", "/index.html", "/config.js", "/app.js", "/styles.css"}:
                 route.continue_()
                 return
             requests.append((route.request.method, path, parsed.query))
@@ -310,3 +310,23 @@ def test_mobile_layout_settings_and_account_preview(browser_page):
     page.screenshot(
         path=str(ROOT / "tests/browser_artifacts/desktop.png"), full_page=True
     )
+
+
+def test_deployed_api_default_and_saved_override(browser_page):
+    page, url, _, _, _ = browser_page
+    page.route(
+        "**/config.js",
+        lambda route: route.fulfill(
+            content_type="text/javascript",
+            body='window.HERMES_CONFIG = {apiBase: "https://api.example.com"};',
+        ),
+    )
+    page.goto(url)
+    playwright.expect(page.locator("#connectionText")).to_have_text("API connected")
+    assert page.evaluate("apiBase") == "https://api.example.com"
+    page.evaluate(
+        "localStorage.setItem('hermes.apiBase.v1', JSON.stringify('https://override.example.com'))"
+    )
+    page.reload()
+    playwright.expect(page.locator("#connectionText")).to_have_text("API connected")
+    assert page.evaluate("apiBase") == "https://override.example.com"

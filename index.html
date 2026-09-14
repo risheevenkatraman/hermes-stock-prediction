@@ -1,423 +1,530 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#07111f" />
-    <title>Hermes — market intelligence</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#173d35" />
+    <title>Hermes | Market research</title>
     <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
   </head>
   <body>
-    <div class="app-shell">
-      <aside class="sidebar">
-        <a class="brand" href="#" aria-label="Hermes home">
-          <span class="brand-mark">✦</span>
-          <span>hermes</span>
-        </a>
-        <div class="workspace-label">WORKSPACE</div>
-        <nav class="nav-list" aria-label="Primary navigation">
-          <a class="nav-item active" href="#overview"
-            ><span class="nav-icon">⌂</span>Overview</a
-          >
-          <a class="nav-item" href="#watchlist"
-            ><span class="nav-icon">◉</span>Watchlist
-            <span class="nav-count">8</span></a
-          >
-          <a class="nav-item" href="#signals"
-            ><span class="nav-icon">⌁</span>Signals</a
-          >
-          <a class="nav-item" href="#research"
-            ><span class="nav-icon">▤</span>Research</a
-          >
-        </nav>
-        <div class="sidebar-bottom">
-          <div class="model-status">
-            <span class="status-dot"></span>
-            <div>
-              <strong>Model online</strong><small>Updated 2m ago</small>
-            </div>
-          </div>
-          <a class="nav-item muted" href="#settings"
-            ><span class="nav-icon">⚙</span>Settings</a
-          >
-          <div class="user-card">
-            <div class="avatar">JD</div>
-            <div><strong>Jordan Davis</strong><small>Pro workspace</small></div>
-            <span class="more">•••</span>
-          </div>
-        </div>
-      </aside>
-
-      <main class="main-content" id="overview">
-        <header class="topbar">
-          <div class="mobile-brand">
-            <span class="brand-mark">✦</span> hermes
-          </div>
-          <div class="topbar-actions">
-            <span class="market-open"
-              ><span class="status-dot"></span> US markets open</span
-            ><button class="icon-button" aria-label="Notifications">
-              ♢<i></i></button
-            ><button class="avatar small">JD</button>
-          </div>
-        </header>
-
-        <section class="welcome-row">
-          <div>
-            <p class="eyebrow">
-              THURSDAY, SEP 04, 2026 <span class="live-pill">LIVE</span>
-            </p>
-            <h1>Good evening, Jordan <span>✦</span></h1>
-            <p class="subtitle">
-              Your market briefing is ready. Here’s what deserves your attention
-              today.
-            </p>
-          </div>
-          <button class="button primary" id="refreshButton">
-            <span>↻</span> Refresh analysis
+    <a class="skip-link" href="#main">Skip to research</a>
+    <aside class="sidebar">
+      <a class="brand" href="#overview" aria-label="Hermes overview"
+        ><span class="brand-mark">h.</span>hermes<span class="brand-dot"></span
+      ></a>
+      <p class="side-label">RESEARCH WORKSPACE</p>
+      <nav aria-label="Main navigation">
+        <a class="nav-link" href="#overview"
+          ><span aria-hidden="true">01</span> Overview</a
+        >
+        <a class="nav-link" href="#news"
+          ><span aria-hidden="true">02</span> Company news</a
+        >
+        <a class="nav-link" href="#performance"
+          ><span aria-hidden="true">03</span> Model performance</a
+        >
+        <a class="nav-link" href="#traders"
+          ><span aria-hidden="true">04</span> Trader disclosures</a
+        >
+      </nav>
+      <div class="saved-header">
+        <p class="side-label">SAVED TICKERS</p>
+        <span id="savedCount">0</span>
+      </div>
+      <div id="watchlist" class="watchlist"></div>
+      <p class="side-note">Saved in this browser. No account required.</p>
+      <div class="sidebar-bottom">
+        <button id="openSettings" class="side-button" type="button">
+          Connection settings <span aria-hidden="true">&#8599;</span>
+        </button>
+        <button id="openAccount" class="account-button" type="button">
+          <span class="avatar">G</span
+          ><span>Guest workspace<small>Accounts coming later</small></span
+          ><span class="preview-tag">PREVIEW</span>
+        </button>
+      </div>
+    </aside>
+    <main id="main">
+      <header class="topbar">
+        <span class="breadcrumb">Workspace <span>/</span> Research</span>
+        <div class="topbar-right">
+          <time id="today"></time
+          ><button id="checkConnection" class="connection" type="button">
+            <span class="status-dot"></span
+            ><span id="connectionText">Checking API</span>
           </button>
-          <form class="ticker-controls" id="tickerForm">
-            <label for="tickerInput">SYMBOL</label>
-            <input
+        </div>
+      </header>
+      <section id="overview" class="intro">
+        <div>
+          <p class="eyebrow">DAILY MARKET RESEARCH</p>
+          <h1>Understand the signal.</h1>
+          <p class="intro-copy">
+            Price forecasts, company news, and the evidence behind them.
+          </p>
+        </div>
+        <span class="quiet-tag">US equities &amp; ETFs</span>
+      </section>
+      <section class="search-panel" aria-label="Choose a stock">
+        <form id="tickerForm">
+          <label for="tickerInput">Ticker symbol</label>
+          <div class="search-input">
+            <span aria-hidden="true">&#8981;</span
+            ><input
               id="tickerInput"
               name="ticker"
               value="SPY"
               maxlength="10"
               pattern="[A-Za-z0-9.\-]+"
               autocomplete="off"
-              aria-label="Stock ticker symbol"
-            />
-            <button class="button secondary" type="submit">
-              Analyze ticker
+              spellcheck="false"
+              required
+            /><button class="button primary" type="submit" id="analyzeButton">
+              Analyze <span aria-hidden="true">&#8594;</span>
             </button>
-            <div class="ticker-presets" aria-label="Popular ticker symbols">
-              <button
-                type="button"
-                class="ticker-preset active"
-                data-ticker="SPY"
-              >
-                SPY
-              </button>
-              <button type="button" class="ticker-preset" data-ticker="AAPL">
-                AAPL
-              </button>
-              <button type="button" class="ticker-preset" data-ticker="NVDA">
-                NVDA
-              </button>
-              <button type="button" class="ticker-preset" data-ticker="MSFT">
-                MSFT
-              </button>
-              <button type="button" class="ticker-preset" data-ticker="TSLA">
-                TSLA
-              </button>
-            </div>
-          </form>
-        </section>
-
-        <section class="metric-grid" aria-label="Portfolio summary">
-          <article class="metric-card">
-            <div class="metric-top">
-              <span>MARKET MOOD</span
-              ><span class="trend-badge positive">+6.4%</span>
-            </div>
-            <div class="metric-value">Bullish</div>
-            <div class="meter"><span style="width: 72%"></span></div>
-            <div class="metric-foot">
-              <span>Composite sentiment</span><strong>72 / 100</strong>
-            </div>
-          </article>
-          <article class="metric-card">
-            <div class="metric-top">
-              <span>WATCHLIST PULSE</span
-              ><span class="trend-badge positive">+2.8%</span>
-            </div>
-            <div class="metric-value">Positive</div>
-            <div class="meter purple"><span style="width: 64%"></span></div>
-            <div class="metric-foot">
-              <span>5 of 8 assets rising</span><strong>64 / 100</strong>
-            </div>
-          </article>
-          <article class="metric-card">
-            <div class="metric-top">
-              <span>RISK TEMPERATURE</span
-              ><span class="trend-badge neutral">Moderate</span>
-            </div>
-            <div class="metric-value">Balanced</div>
-            <div class="meter amber"><span style="width: 46%"></span></div>
-            <div class="metric-foot">
-              <span>Volatility index</span><strong>46 / 100</strong>
-            </div>
-          </article>
-          <article class="metric-card budget-card">
-            <div class="metric-top">
-              <span>YOUR INVESTMENT BUDGET</span
-              ><button class="edit-budget" id="editBudget">Edit</button>
-            </div>
-            <div class="metric-value">$5,000</div>
-            <div class="metric-foot">
-              <span>Available to deploy</span
-              ><strong class="text-green">+ $120 this month</strong>
-            </div>
-          </article>
-        </section>
-
-        <section class="content-grid">
-          <article class="panel chart-panel" id="watchlist">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">TREND FORECAST</p>
-                <h2>Market outlook</h2>
-              </div>
-              <div class="range-tabs">
-                <button class="range active" data-range="1D" type="button">
-                  1D</button
-                ><button class="range" data-range="1W" type="button">1W</button
-                ><button class="range" data-range="1M" type="button">1M</button
-                ><button class="range" data-range="3M" type="button">3M</button>
-              </div>
-            </div>
-            <div class="chart-meta">
-              <div>
-                <span class="price-label">S&amp;P 500 · forecast</span>
-                <strong id="chartPrice">5,521.94</strong>
-                <span class="price-change">next trading day</span>
-              </div>
-              <span class="confidence">
-                Current price <strong id="currentPrice">5,521.94</strong>
-              </span>
-            </div>
-            <div class="chart-wrap">
-              <svg
-                viewBox="0 0 760 250"
-                preserveAspectRatio="none"
-                role="img"
-                id="trendChart"
-                aria-label="SPY daily price trend chart"
-              >
-                <defs>
-                  <linearGradient id="area" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stop-color="#b17b27" stop-opacity=".24" />
-                    <stop offset="100%" stop-color="#b17b27" stop-opacity="0" />
-                  </linearGradient>
-                </defs>
-                <g class="grid-lines">
-                  <line x1="0" y1="35" x2="760" y2="35" />
-                  <line x1="0" y1="96" x2="760" y2="96" />
-                  <line x1="0" y1="157" x2="760" y2="157" />
-                  <line x1="0" y1="218" x2="760" y2="218" />
-                </g>
-                <path id="chartArea" class="chart-area" />
-                <path id="chartLine" class="chart-line" />
-                <circle id="chartPoint" class="chart-point" r="5" />
-                <line id="todayLine" class="today-line" />
-                <text id="todayLabel">LATEST</text>
-              </svg>
-              <div class="chart-labels">
-                <span id="chartStartLabel">Loading…</span
-                ><span id="chartEndLabel">Loading…</span>
-              </div>
-            </div>
-            <div class="forecast-callout">
-              <span class="forecast-icon">✦</span>
-              <div>
-                <strong>Model forecast: continued upside</strong>
-                <p>
-                  Momentum and news sentiment are aligned. Expected range
-                  <b>+1.8% to +3.2%</b> over the next 5 trading days.
-                </p>
-              </div>
-              <span class="arrow">→</span>
-            </div>
-          </article>
-
-          <article class="panel signals-panel" id="signals">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">AI SIGNALS</p>
-                <h2>What’s moving</h2>
-              </div>
-              <a class="see-all" href="#research">See all <span>→</span></a>
-            </div>
-            <div class="signal-list">
-              <div class="signal">
-                <div class="ticker-logo blue">N</div>
-                <div class="signal-main">
-                  <div>
-                    <strong>NVIDIA <small>NVDA</small></strong
-                    ><span class="signal-time">12 min ago</span>
-                  </div>
-                  <p>
-                    New data center partnership points to resilient AI demand.
-                  </p>
-                </div>
-                <span class="signal-score positive">+8.6</span>
-              </div>
-              <div class="signal">
-                <div class="ticker-logo orange">A</div>
-                <div class="signal-main">
-                  <div>
-                    <strong>Amazon <small>AMZN</small></strong
-                    ><span class="signal-time">34 min ago</span>
-                  </div>
-                  <p>
-                    Cloud growth accelerates as enterprise spending returns.
-                  </p>
-                </div>
-                <span class="signal-score positive">+7.2</span>
-              </div>
-              <div class="signal">
-                <div class="ticker-logo pink">T</div>
-                <div class="signal-main">
-                  <div>
-                    <strong>Tesla <small>TSLA</small></strong
-                    ><span class="signal-time">1 hr ago</span>
-                  </div>
-                  <p>Delivery estimates trimmed ahead of quarterly update.</p>
-                </div>
-                <span class="signal-score negative">−4.1</span>
-              </div>
-            </div>
-          </article>
-        </section>
-
-        <section class="bottom-grid" id="research">
-          <article class="panel recommendations">
-            <div class="panel-header">
-              <div>
-                <p class="eyebrow">PERSONALIZED FOR YOU</p>
-                <h2>Ideas within your budget</h2>
-                <p class="panel-subtitle">Balanced growth · $5,000 available</p>
-              </div>
-              <a class="see-all" href="#watchlist"
-                >View portfolio <span>→</span></a
-              >
-            </div>
-            <div class="stock-table">
-              <div class="table-head">
-                <span>ASSET</span><span>MODEL VIEW</span><span>PRICE</span
-                ><span>5D FORECAST</span><span></span>
-              </div>
-              <div class="stock-row">
-                <div class="asset">
-                  <div class="ticker-logo blue">N</div>
-                  <div>
-                    <strong>NVIDIA</strong><small>NVDA · Technology</small>
-                  </div>
-                </div>
-                <span class="view-pill bullish">Strong buy</span
-                ><strong>$119.31</strong
-                ><span class="forecast positive">+3.2% <small>↗</small></span
-                ><button class="add-button" aria-label="Add NVIDIA">+</button>
-              </div>
-              <div class="stock-row">
-                <div class="asset">
-                  <div class="ticker-logo purple">M</div>
-                  <div>
-                    <strong>Microsoft</strong><small>MSFT · Technology</small>
-                  </div>
-                </div>
-                <span class="view-pill bullish">Buy</span
-                ><strong>$415.76</strong
-                ><span class="forecast positive">+2.4% <small>↗</small></span
-                ><button class="add-button" aria-label="Add Microsoft">
-                  +
-                </button>
-              </div>
-              <div class="stock-row">
-                <div class="asset">
-                  <div class="ticker-logo orange">A</div>
-                  <div>
-                    <strong>Amazon</strong><small>AMZN · Consumer</small>
-                  </div>
-                </div>
-                <span class="view-pill watch">Watch</span
-                ><strong>$231.98</strong
-                ><span class="forecast positive">+1.7% <small>↗</small></span
-                ><button class="add-button" aria-label="Add Amazon">+</button>
-              </div>
-            </div>
-          </article>
-          <aside class="panel methodology">
-            <p class="eyebrow">HOW IT WORKS</p>
-            <h2>One clear signal from three sources.</h2>
-            <p>
-              Hermes blends the context behind the numbers so you can make
-              decisions with more conviction.
-            </p>
-            <div class="method-item">
-              <span class="method-icon news">◌</span>
-              <div>
-                <strong>News intelligence</strong
-                ><small>Scans 12,400+ articles daily</small>
-              </div>
-              <span class="check">✓</span>
-            </div>
-            <div class="method-item">
-              <span class="method-icon traders">♧</span>
-              <div>
-                <strong>Trader activity</strong
-                ><small>Tracks institutional flows</small>
-              </div>
-              <span class="check">✓</span>
-            </div>
-            <div class="method-item">
-              <span class="method-icon price">⌁</span>
-              <div>
-                <strong>Price patterns</strong
-                ><small>Finds momentum &amp; risk</small>
-              </div>
-              <span class="check">✓</span>
-            </div>
-            <button class="button secondary">
-              Explore our methodology <span>→</span>
-            </button>
-          </aside>
-        </section>
-        <section class="panel performance-panel" id="performance">
+          </div>
+        </form>
+        <div class="quick-select" aria-label="Quick select tickers">
+          <span>Quick select</span
+          ><button type="button" data-ticker="SPY">SPY</button
+          ><button type="button" data-ticker="QQQ">QQQ</button
+          ><button type="button" data-ticker="AAPL">AAPL</button
+          ><button type="button" data-ticker="MSFT">MSFT</button
+          ><button type="button" data-ticker="NVDA">NVDA</button>
+        </div>
+      </section>
+      <div class="symbol-heading">
+        <div>
+          <h2 id="selectedSymbol">SPY</h2>
+          <span class="quiet-tag">Daily analysis</span>
+        </div>
+        <button
+          id="saveTicker"
+          class="button subtle"
+          type="button"
+          aria-pressed="false"
+        >
+          + Save ticker
+        </button>
+      </div>
+      <div class="overview-grid">
+        <section class="panel price-panel" aria-labelledby="priceTitle">
           <div class="panel-header">
             <div>
-              <p class="eyebrow">MODEL PERFORMANCE</p>
-              <h2>Backtest across the market</h2>
-              <p class="panel-subtitle">
-                Walk-forward evaluation · selected market basket
-              </p>
+              <p class="eyebrow">MARKET HISTORY</p>
+              <h3 id="priceTitle">Adjusted daily close</h3>
             </div>
-            <button
-              class="button secondary performance-button"
-              id="loadPerformance"
+            <div class="ranges" aria-label="Chart window">
+              <button type="button" data-range="1D" aria-pressed="false">
+                2 closes</button
+              ><button type="button" data-range="1W" aria-pressed="false">
+                5 sessions</button
+              ><button type="button" data-range="1M" aria-pressed="true">
+                1 month</button
+              ><button type="button" data-range="3M" aria-pressed="false">
+                3 months
+              </button>
+            </div>
+          </div>
+          <div class="price-heading">
+            <strong id="closeValue" class="large-number">&#8212;</strong
+            ><span id="windowChange" class="price-change"></span>
+          </div>
+          <p id="closeAsOf" class="muted">No market data loaded.</p>
+          <p
+            id="chartStatus"
+            class="status-message"
+            role="status"
+            aria-live="polite"
+          ></p>
+          <div id="chartContainer" class="chart-container" hidden>
+            <svg
+              id="priceChart"
+              viewBox="0 0 800 250"
+              role="img"
+              aria-labelledby="chartTitle chartDescription"
             >
-              Load performance
-              <span>→</span>
+              <title id="chartTitle">Daily price history</title>
+              <desc id="chartDescription">
+                Use the slider below to inspect each daily close, or open the
+                data table.
+              </desc>
+              <defs>
+                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#2a7a63" stop-opacity=".18" />
+                  <stop offset="100%" stop-color="#2a7a63" stop-opacity="0" />
+                </linearGradient>
+              </defs>
+              <g id="chartGrid"></g>
+              <path id="chartArea" fill="url(#chartGradient)" />
+              <path
+                id="chartLine"
+                fill="none"
+                stroke="#2a7a63"
+                stroke-width="2.5"
+              />
+              <line id="chartCursor" stroke="#819a8d" stroke-dasharray="4 4" />
+              <circle
+                id="chartPoint"
+                r="5"
+                fill="#173d35"
+                stroke="white"
+                stroke-width="2"
+              />
+            </svg>
+            <div class="chart-labels">
+              <span id="chartStart"></span><span id="chartEnd"></span>
+            </div>
+            <div class="chart-inspector">
+              <label for="chartScrubber">Inspect a close</label
+              ><input
+                id="chartScrubber"
+                type="range"
+                min="0"
+                max="1"
+                value="1"
+              /><output id="chartReadout" for="chartScrubber"></output>
+            </div>
+          </div>
+          <details id="priceDetails">
+            <summary>View daily prices</summary>
+            <div class="table-scroll">
+              <table>
+                <caption class="sr-only">
+                  Selected window of adjusted daily closing prices
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Session</th>
+                    <th scope="col">Adjusted close</th>
+                  </tr>
+                </thead>
+                <tbody id="priceRows"></tbody>
+              </table>
+            </div>
+          </details>
+          <p class="footnote">
+            Completed daily bars, not a real-time quote. Prices are adjusted by
+            the provider; no currency conversion is applied.
+          </p>
+        </section>
+        <section class="panel forecast-panel" aria-labelledby="forecastTitle">
+          <div class="panel-header">
+            <div>
+              <p class="eyebrow">PRICE MODEL</p>
+              <h3 id="forecastTitle">The next close</h3>
+            </div>
+            <span class="quiet-tag">Estimate</span>
+          </div>
+          <p
+            id="forecastStatus"
+            class="status-message"
+            role="status"
+            aria-live="polite"
+          >
+            No forecast loaded.
+          </p>
+          <div id="forecastContent" hidden>
+            <strong class="large-number" id="forecastPrice"></strong>
+            <p class="forecast-change" id="forecastChange"></p>
+            <p class="muted" id="forecastAsOf"></p>
+            <div class="forecast-rule"></div>
+            <dl class="data-list">
+              <div>
+                <dt>Five-session return estimate</dt>
+                <dd id="fiveDayReturn"></dd>
+              </div>
+              <div>
+                <dt>
+                  Held-out return error
+                  <abbr
+                    title="Mean absolute error, in percentage points of return"
+                    >MAE</abbr
+                  >
+                </dt>
+                <dd id="forecastMae"></dd>
+              </div>
+              <div>
+                <dt>Held-out sign accuracy</dt>
+                <dd id="forecastAccuracy"></dd>
+              </div>
+              <div>
+                <dt>Neural contribution</dt>
+                <dd id="deepWeight"></dd>
+              </div>
+              <div>
+                <dt>Training observations</dt>
+                <dd id="trainingRows"></dd>
+              </div>
+            </dl>
+            <details>
+              <summary>How this estimate is calculated</summary>
+              <p>
+                A statistical regressor and neural model predict returns. Their
+                blend is selected on earlier data and evaluated on a later
+                holdout. The five-session forecast is a separate regressor.
+              </p>
+              <p id="forecastEvaluation"></p>
+              <p>
+                Return error and direction accuracy measure different things.
+                These estimates do not establish a trading advantage.
+              </p>
+            </details>
+          </div>
+          <p class="footnote">
+            A price estimate, not a price target or buy/sell recommendation.
+          </p>
+        </section>
+      </div>
+      <section class="panel direction-panel" aria-labelledby="directionTitle">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">DIRECTION CHECK</p>
+            <h3 id="directionTitle">Does the model beat a simple baseline?</h3>
+          </div>
+          <button id="reloadDirection" class="button subtle" type="button">
+            Recheck direction
+          </button>
+        </div>
+        <p
+          id="directionStatus"
+          class="status-message"
+          role="status"
+          aria-live="polite"
+        >
+          No direction analysis loaded.
+        </p>
+        <div id="directionContent" hidden>
+          <div class="direction-metrics">
+            <div>
+              <span>Selected policy</span><strong id="directionPolicy"></strong
+              ><small id="directionProbability"></small>
+            </div>
+            <div>
+              <span>Held-out accuracy</span
+              ><strong id="directionAccuracy"></strong
+              ><small id="directionRows"></small>
+            </div>
+            <div>
+              <span>Always-up baseline</span
+              ><strong id="baselineAccuracy"></strong
+              ><small>Predict up every session</small>
+            </div>
+            <div>
+              <span>Difference</span><strong id="accuracyDifference"></strong
+              ><small>Percentage points</small>
+            </div>
+          </div>
+          <p id="directionConclusion" class="evidence-note"></p>
+          <p id="directionNews" class="muted"></p>
+          <p id="directionDates" class="footnote"></p>
+        </div>
+        <p class="footnote">
+          Experimental classifier, separate from the return forecast.
+          Probabilities are uncalibrated. A small holdout gain alone is not
+          evidence of a reliable advantage.
+        </p>
+      </section>
+      <section class="panel" id="news" aria-labelledby="newsTitle">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">COMPANY CONTEXT</p>
+            <h3 id="newsTitle">The news behind the ticker</h3>
+            <p id="newsSubtitle" class="muted">
+              Saved articles for the selected ticker.
+            </p>
+          </div>
+          <div class="button-group">
+            <label class="button subtle file-button"
+              >Import JSON<input
+                id="newsImport"
+                type="file"
+                accept="application/json,.json" /></label
+            ><button id="scanNews" class="button secondary" type="button">
+              Scan latest news
             </button>
           </div>
-          <div class="performance-content" id="performanceContent">
-            <div class="performance-empty">
-              <span class="forecast-icon">⌁</span>
-              <div>
-                <strong
-                  >See how Hermes compares before trusting a signal.</strong
-                >
-                <p>
-                  Run a five-year walk-forward backtest against two simple
-                  benchmarks.
-                </p>
-              </div>
-            </div>
+        </div>
+        <p
+          id="newsStatus"
+          class="status-message"
+          role="status"
+          aria-live="polite"
+        >
+          No news loaded.
+        </p>
+        <ul id="newsArticles" class="news-list"></ul>
+        <details>
+          <summary>News coverage and timing</summary>
+          <p>
+            Alpha Vantage supplies company-specific sentiment. Headlines and
+            summaries help a separate classifier learn subsequent market
+            direction. Article tone alone does not predict the response.
+          </p>
+          <p>
+            Only articles available by the forecast's closing-time cutoff are
+            used. Newly fetched articles do not become historical training data.
+            Archived imports need valid publication and availability timestamps.
+          </p>
+          <p id="newsCoverage"></p>
+        </details>
+      </section>
+      <section
+        class="panel"
+        id="performance"
+        aria-labelledby="performanceTitle"
+      >
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">VERIFY THE SIGNAL</p>
+            <h3 id="performanceTitle">Walk-forward performance</h3>
+            <p class="muted">
+              Compare return models and baselines on the same historical
+              observations.
+            </p>
           </div>
-        </section>
-        <footer>
-          <span>Hermes intelligence · Data delayed 15 min</span
-          ><span><a href="#">Help center</a><a href="#">Privacy</a></span>
-        </footer>
-      </main>
-    </div>
-    <div class="toast" id="toast">Analysis refreshed <span>✓</span></div>
-    <script src="app.js"></script>
+          <button
+            id="exportBacktest"
+            class="button subtle"
+            type="button"
+            disabled
+          >
+            Export results
+          </button>
+        </div>
+        <form id="backtestForm" class="backtest-controls">
+          <div>
+            <label for="backtestTickers">Tickers, separated by commas</label
+            ><input id="backtestTickers" value="SPY" maxlength="219" required />
+          </div>
+          <div>
+            <label for="backtestPeriod">History</label
+            ><select id="backtestPeriod">
+              <option value="1y">1 year</option>
+              <option value="2y" selected>2 years</option>
+              <option value="5y">5 years</option>
+            </select>
+          </div>
+          <button id="runBacktest" class="button primary" type="submit">
+            Run backtest
+          </button>
+        </form>
+        <p
+          id="backtestStatus"
+          class="status-message"
+          role="status"
+          aria-live="polite"
+        >
+          Run a backtest to see measured results. Models retrain at every step;
+          larger runs can take several minutes.
+        </p>
+        <div id="backtestResults"></div>
+        <details>
+          <summary>How to read these results</summary>
+          <p>
+            Next-day models share an evaluation window. Five-session accuracy
+            uses a different target horizon and is shown separately. Lower
+            return MAE is better; higher directional accuracy is better.
+          </p>
+          <p>
+            The zero-return baseline is used for return error. Always-up is used
+            for directional accuracy. These are two different baselines. The
+            direction classifier's output is a class, so its return MAE is not
+            shown.
+          </p>
+          <p>
+            Portfolio returns assume closing-price execution without fees,
+            slippage, or execution delays. They are idealized and are not
+            presented as investable returns here. Raw metrics remain available
+            in the export.
+          </p>
+          <p>
+            These backtests evaluate the price ensemble and its original
+            classifier, not the experimental news direction head shown above.
+          </p>
+        </details>
+      </section>
+      <section class="panel" id="traders" aria-labelledby="traderTitle">
+        <div class="panel-header">
+          <div>
+            <p class="eyebrow">DISCLOSED ACTIVITY</p>
+            <h3 id="traderTitle">Trader disclosures</h3>
+            <p class="muted">
+              Provider records across tickers. Reported trades may be delayed or
+              incomplete.
+            </p>
+          </div>
+          <button id="refreshTraders" class="button secondary" type="button">
+            Refresh disclosures
+          </button>
+        </div>
+        <p
+          id="traderStatus"
+          class="status-message"
+          role="status"
+          aria-live="polite"
+        >
+          Checking configured sources.
+        </p>
+        <div id="traderResults"></div>
+        <p class="footnote">
+          Consensus describes disclosed buying and selling, not expected
+          returns. No personalized investment recommendation is inferred.
+        </p>
+      </section>
+      <footer>
+        <span
+          >hermes <span class="footer-dot">/</span> Evidence before
+          conviction.</span
+        ><span>Research estimates. Not financial advice.</span>
+      </footer>
+    </main>
+    <dialog id="settingsDialog">
+      <form id="settingsForm">
+        <div class="dialog-header">
+          <h2>API connection</h2>
+          <button
+            class="icon-button"
+            type="button"
+            data-close="settingsDialog"
+            aria-label="Close connection settings"
+          >
+            &#215;
+          </button>
+        </div>
+        <p>
+          Use the address of your running Hermes server. The dashboard and API
+          can share the same address.
+        </p>
+        <label for="apiUrl">Server URL</label
+        ><input id="apiUrl" type="url" required />
+        <p id="settingsStatus" role="status"></p>
+        <button class="button primary" type="submit">Save and reconnect</button>
+      </form>
+    </dialog>
+    <dialog id="accountDialog">
+      <div class="dialog-header">
+        <h2>Account preview</h2>
+        <button
+          class="icon-button"
+          type="button"
+          data-close="accountDialog"
+          aria-label="Close account preview"
+        >
+          &#215;
+        </button>
+      </div>
+      <span class="quiet-tag">Coming later</span>
+      <p>
+        You are using a guest workspace. Registration, sign-in, and cross-device
+        sync are not available yet.
+      </p>
+      <p>
+        Your saved tickers stay in this browser. No account has been created.
+      </p>
+    </dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
   </body>
 </html>

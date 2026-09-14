@@ -9,6 +9,7 @@ exists. Each adapter normalizes its response into :class:`TraderTrade`.
 from __future__ import annotations
 
 import json
+import math
 import os
 from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
@@ -55,17 +56,19 @@ def _as_float(value: object) -> float | None:
     if value is None or value == "":
         return None
     try:
-        return float(value)
+        parsed = float(value)
+        return parsed if math.isfinite(parsed) else None
     except (TypeError, ValueError):
         return None
 
 
 def _as_date(value: object) -> str:
-    today = datetime.now(tz=timezone.utc).date()
-    if value is None or value == "":
-        return today.isoformat()
     parsed = pd.to_datetime(value, errors="coerce", utc=True)
-    return today.isoformat() if pd.isna(parsed) else parsed.date().isoformat()
+    if value is None or pd.isna(parsed):
+        raise ValueError("A valid disclosure date is required.")
+    if parsed.date() > datetime.now(timezone.utc).date():
+        raise ValueError("A disclosure date cannot be in the future.")
+    return parsed.date().isoformat()
 
 
 def normalize_records(source: str, payload: object) -> list[TraderTrade]:
@@ -85,15 +88,19 @@ def normalize_records(source: str, payload: object) -> list[TraderTrade]:
         if not ticker:
             continue
         action = str(row.get("action", row.get("type", "unknown"))).strip().lower()
+        try:
+            trade_date = _as_date(
+                row.get("trade_date", row.get("date", row.get("transaction_date")))
+            )
+        except (ValueError, TypeError):
+            continue
         records.append(
             TraderTrade(
                 source=source,
                 trader=str(row.get("trader", row.get("investor", "unknown"))),
                 ticker=ticker,
                 action=action,
-                trade_date=_as_date(
-                    row.get("trade_date", row.get("date", row.get("transaction_date")))
-                ),
+                trade_date=trade_date,
                 reported_return=_as_float(
                     row.get(
                         "reported_return", row.get("return", row.get("performance"))

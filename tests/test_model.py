@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import pytest
 from fastapi.testclient import TestClient
 
 from backend.backtest import walk_forward_backtest
@@ -143,3 +144,127 @@ def test_multi_backtest_endpoint_aggregates_tickers(monkeypatch):
     assert set(payload["results"]) == {"SPY", "QQQ"}
     assert payload["summary"]["model"]["tickers_evaluated"] == 2
     assert payload["summary"]["model"]["average_annualized_volatility"] >= 0
+
+
+@pytest.mark.parametrize("trend, expected", [(1, 100), (-1, 0), (0, 50)])
+def test_rsi_handles_one_sided_and_flat_prices(trend, expected):
+    prices = synthetic_prices()
+    prices["close"] = 200 + np.arange(len(prices)) * trend
+    prices["high"] = prices["close"] + 1
+    prices["low"] = prices["close"] - 1
+    prices["volume"] = 0
+    features, _ = build_features(prices)
+    assert (features["rsi_14"] == expected).all()
+    assert (features["volume_change"] == 0).all()
+
+
+def test_price_validation_normalizes_columns_and_sorts_without_mutation():
+    prices = synthetic_prices()
+    expected = build_features(prices)
+    shuffled = prices.iloc[::-1].rename(columns=str.upper)
+    original = shuffled.copy(deep=True)
+    actual = build_features(shuffled)
+    pd.testing.assert_frame_equal(actual[0], expected[0])
+    pd.testing.assert_series_equal(actual[1], expected[1])
+    pd.testing.assert_frame_equal(shuffled, original)
+
+
+@pytest.mark.parametrize(
+    "column, value",
+    [
+        ("close", np.inf),
+        ("volume", -1),
+        ("high", 1),
+        ("low", 10000),
+        ("date", "invalid"),
+    ],
+)
+def test_invalid_price_rows_are_rejected(column, value):
+    prices = synthetic_prices()
+    if column == "date":
+        prices[column] = prices[column].astype(object)
+    prices.loc[99, column] = value
+    with pytest.raises(ValueError):
+        build_features(prices)
+
+
+def test_duplicate_dates_are_rejected():
+    prices = synthetic_prices()
+    prices.loc[99, "date"] = prices.loc[98, "date"]
+    with pytest.raises(ValueError, match="unique"):
+        build_features(prices)
+
+
+@pytest.mark.parametrize("value, expected", [(-0.01, 0), (0.01, 1), (0, 0)])
+def test_direction_probability_handles_single_class(value, expected):
+    from backend.model import _up_probability
+
+    features, target = build_features(synthetic_prices())
+    target[:] = value
+    probability = _up_probability(features, target, features.iloc[[-1]])
+    assert probability.tolist() == [expected]
+
+
+def test_drawdown_includes_initial_capital():
+    from backend.backtest import _risk_metrics
+
+    drawdown, _ = _risk_metrics(np.array([-0.1, 0.05]))
+    assert drawdown == pytest.approx(-0.1)
+
+
+def test_five_day_signal_does_not_compound_overlapping_returns():
+    from backend.backtest import _metrics
+
+    result = _metrics(
+        "five-day",
+        pd.Series([0.5, 0.5]),
+        np.array([0.1, 0.1]),
+        realized_returns=np.array([0.01, -0.02]),
+    )
+    assert result.mae == pytest.approx(0.4)
+    assert result.cumulative_return == pytest.approx(-0.0102)
+
+
+def test_features_do_not_depend_on_future_prices():
+    prices = synthetic_prices()
+    before, _ = build_features(prices)
+    prices.loc[80:, ["close", "high", "low"]] *= 2
+    after, _ = build_features(prices)
+    pd.testing.assert_frame_equal(before.loc[:79], after.loc[:79])
+
+
+def test_backtest_only_trains_on_observable_targets(monkeypatch):
+    from types import SimpleNamespace
+    from backend import backtest
+
+    class RecordingRegressor:
+        def fit(self, features, target):
+            self.last_training_row = features.index[-1]
+            self.horizon = 5 if target.name == "five_day" else 1
+            return self
+
+        def predict(self, features):
+            assert self.last_training_row + self.horizon <= features.index[0]
+            return np.zeros(len(features))
+
+    original_training_data = backtest._training_data
+
+    def training_data(frame, horizon, features=None):
+        x, y = original_training_data(frame, horizon, features)
+        return x, y.rename("five_day" if horizon == 5 else "one_day")
+
+    monkeypatch.setattr(backtest, "_training_data", training_data)
+    monkeypatch.setattr(backtest, "_regression_model", RecordingRegressor)
+    monkeypatch.setattr(
+        backtest,
+        "predict_return",
+        lambda *args: SimpleNamespace(
+            validation_mae=1,
+            predicted_return=0,
+            validation_predictions=np.zeros(
+                len(args[0]) - max(30, int(len(args[0]) * 0.8))
+            ),
+        ),
+    )
+    monkeypatch.setattr(backtest, "_up_probability", lambda *args: np.array([0.5]))
+    backtest.walk_forward_backtest(synthetic_prices(100), min_train_rows=40)

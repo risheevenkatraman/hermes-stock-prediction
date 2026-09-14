@@ -1,0 +1,622 @@
+{
+  "created_at": "2026-09-14T00:53:46.185629+00:00",
+  "period": "2y",
+  "min_train_rows": 252,
+  "step": 1,
+  "versions": {
+    "numpy": "2.5.2",
+    "pandas": "2.3.3",
+    "torch": "2.14.0",
+    "scikit-learn": "1.9.0",
+    "yfinance": "0.2.66"
+  },
+  "source_sha256": {
+    "backend\\backtest.py": "945165d6b048cb695b33056020cda57706b88600f8f420035cee3b1f06409593",
+    "backend\\data.py": "00b67b1f0cd6f0f032a6d00fdce718469781e8662df1164c3c8d9087318446b3",
+    "backend\\deep_model.py": "0509e0e58d5e631fd8fbad99308c9dfaf24d2b2d2872c283b3c4c286e71dca48",
+    "backend\\ensemble.py": "c548e8c8c1c2808fb1f24f6a73e3ef841ee9a4cfd4587397a12d8cb74a2be7f9",
+    "backend\\main.py": "369e9c8b816ff3e5b7fb254adcfc234e52f2873cb832c041b2746d68b5417920",
+    "backend\\model.py": "f9b21f430688c7082483437e908664307577483a0f1e30ccd89327fcabbecac7",
+    "backend\\trader_pipeline.py": "574e9c5f875d109d8a6cd5f1f6f5b037bb47d75a55ecdd7469158bea4135dfff",
+    "backend\\__init__.py": "9ab32c76853eb363814584164808f5e3ef5c45391890517c38a55ef418ad5d01"
+  },
+  "results": {
+    "SPY": {
+      "data_start": "2024-09-12 00:00:00+00:00",
+      "data_end": "2026-09-11 00:00:00+00:00",
+      "first_prediction_date": "2025-10-14 00:00:00+00:00",
+      "last_prediction_date": "2026-09-03 00:00:00+00:00",
+      "data_sha256": "dad8e47b9276ad231317520a614ace9731ef250901102bb976f555341cab0cc4",
+      "strategies": {
+        "model": {
+          "name": "Hermes model",
+          "observations": 224,
+          "mae": 0.007004,
+          "directional_accuracy": 0.5179,
+          "cumulative_return": 0.1094,
+          "max_drawdown": -0.0854,
+          "annualized_volatility": 0.1039,
+          "brier_score": null
+        },
+        "deep_model": {
+          "name": "Hermes deep model",
+          "observations": 224,
+          "mae": 0.006682,
+          "directional_accuracy": 0.5,
+          "cumulative_return": 0.0277,
+          "max_drawdown": -0.0712,
+          "annualized_volatility": 0.0996,
+          "brier_score": null
+        },
+        "hybrid_model": {
+          "name": "Hermes hybrid model",
+          "observations": 224,
+          "mae": 0.006729,
+          "directional_accuracy": 0.5402,
+          "cumulative_return": 0.1297,
+          "max_drawdown": -0.0764,
+          "annualized_volatility": 0.1035,
+          "brier_score": null
+        },
+        "previous_day": {
+          "name": "Previous-day return",
+          "observations": 224,
+          "mae": 0.009204,
+          "directional_accuracy": 0.5179,
+          "cumulative_return": 0.0869,
+          "max_drawdown": -0.0572,
+          "annualized_volatility": 0.0922,
+          "brier_score": null
+        },
+        "buy_and_hold": {
+          "name": "Buy and hold",
+          "observations": 224,
+          "mae": 0.006303,
+          "directional_accuracy": 0.5446,
+          "cumulative_return": 0.1727,
+          "max_drawdown": -0.0888,
+          "annualized_volatility": 0.1299,
+          "brier_score": null
+        },
+        "five_day_model": {
+          "name": "Hermes five-day model",
+          "observations": 224,
+          "mae": 0.017054,
+          "directional_accuracy": 0.4955,
+          "cumulative_return": -0.0127,
+          "max_drawdown": -0.1134,
+          "annualized_volatility": 0.1039,
+          "brier_score": null
+        },
+        "direction_classifier": {
+          "name": "Hermes direction classifier",
+          "observations": 224,
+          "mae": 0.999767,
+          "directional_accuracy": 0.5134,
+          "cumulative_return": 0.1113,
+          "max_drawdown": -0.0684,
+          "annualized_volatility": 0.0949,
+          "brier_score": 0.301517
+        }
+      },
+      "seconds": 46.31
+    },
+    "QQQ": {
+      "data_start": "2024-09-12 00:00:00+00:00",
+      "data_end": "2026-09-11 00:00:00+00:00",
+      "first_prediction_date": "2025-10-14 00:00:00+00:00",
+      "last_prediction_date": "2026-09-03 00:00:00+00:00",
+      "data_sha256": "64dab636bb4d3c64271d25335aa3b10be7faa800549a7d468d1a0044275d235f",
+      "strategies": {
+        "model": {
+          "name": "Hermes model",
+          "observations": 224,
+          "mae": 0.010682,
+          "directional_accuracy": 0.4911,
+          "cumulative_return": 0.1515,
+          "max_drawdown": -0.1002,
+          "annualized_volatility": 0.1528,
+          "brier_score": null
+        },
+        "deep_model": {
+          "name": "Hermes deep model",
+          "observations": 224,
+          "mae": 0.01011,
+          "directional_accuracy": 0.5357,
+          "cumulative_return": 0.1971,
+          "max_drawdown": -0.0825,
+          "annualized_volatility": 0.1624,
+          "brier_score": null
+        },
+        "hybrid_model": {
+          "name": "Hermes hybrid model",
+          "observations": 224,
+          "mae": 0.010428,
+          "directional_accuracy": 0.5089,
+          "cumulative_return": 0.1601,
+          "max_drawdown": -0.0843,
+          "annualized_volatility": 0.1534,
+          "brier_score": null
+        },
+        "previous_day": {
+          "name": "Previous-day return",
+          "observations": 224,
+          "mae": 0.0144,
+          "directional_accuracy": 0.5045,
+          "cumulative_return": 0.1392,
+          "max_drawdown": -0.1056,
+          "annualized_volatility": 0.1331,
+          "brier_score": null
+        },
+        "buy_and_hold": {
+          "name": "Buy and hold",
+          "observations": 224,
+          "mae": 0.009822,
+          "directional_accuracy": 0.5446,
+          "cumulative_return": 0.2067,
+          "max_drawdown": -0.1196,
+          "annualized_volatility": 0.2011,
+          "brier_score": null
+        },
+        "five_day_model": {
+          "name": "Hermes five-day model",
+          "observations": 224,
+          "mae": 0.025158,
+          "directional_accuracy": 0.4732,
+          "cumulative_return": 0.2184,
+          "max_drawdown": -0.1012,
+          "annualized_volatility": 0.175,
+          "brier_score": null
+        },
+        "direction_classifier": {
+          "name": "Hermes direction classifier",
+          "observations": 224,
+          "mae": 0.999806,
+          "directional_accuracy": 0.5045,
+          "cumulative_return": 0.1185,
+          "max_drawdown": -0.1293,
+          "annualized_volatility": 0.1693,
+          "brier_score": 0.311219
+        }
+      },
+      "seconds": 44.21
+    },
+    "AAPL": {
+      "data_start": "2024-09-12 00:00:00+00:00",
+      "data_end": "2026-09-11 00:00:00+00:00",
+      "first_prediction_date": "2025-10-14 00:00:00+00:00",
+      "last_prediction_date": "2026-09-03 00:00:00+00:00",
+      "data_sha256": "e1ee07b2cbbb25ecc20c6975dc11a58653becfa4298df15b8d3d3c634732acaf",
+      "strategies": {
+        "model": {
+          "name": "Hermes model",
+          "observations": 224,
+          "mae": 0.012591,
+          "directional_accuracy": 0.5491,
+          "cumulative_return": 0.1814,
+          "max_drawdown": -0.1081,
+          "annualized_volatility": 0.1847,
+          "brier_score": null
+        },
+        "deep_model": {
+          "name": "Hermes deep model",
+          "observations": 224,
+          "mae": 0.011746,
+          "directional_accuracy": 0.442,
+          "cumulative_return": -0.0306,
+          "max_drawdown": -0.1459,
+          "annualized_volatility": 0.1716,
+          "brier_score": null
+        },
+        "hybrid_model": {
+          "name": "Hermes hybrid model",
+          "observations": 224,
+          "mae": 0.011991,
+          "directional_accuracy": 0.5312,
+          "cumulative_return": 0.2002,
+          "max_drawdown": -0.1121,
+          "annualized_volatility": 0.1893,
+          "brier_score": null
+        },
+        "previous_day": {
+          "name": "Previous-day return",
+          "observations": 224,
+          "mae": 0.016413,
+          "directional_accuracy": 0.4866,
+          "cumulative_return": 0.1296,
+          "max_drawdown": -0.0972,
+          "annualized_volatility": 0.1547,
+          "brier_score": null
+        },
+        "buy_and_hold": {
+          "name": "Buy and hold",
+          "observations": 224,
+          "mae": 0.011267,
+          "directional_accuracy": 0.5357,
+          "cumulative_return": 0.2962,
+          "max_drawdown": -0.138,
+          "annualized_volatility": 0.2503,
+          "brier_score": null
+        },
+        "five_day_model": {
+          "name": "Hermes five-day model",
+          "observations": 224,
+          "mae": 0.034103,
+          "directional_accuracy": 0.4911,
+          "cumulative_return": 0.1441,
+          "max_drawdown": -0.1113,
+          "annualized_volatility": 0.1911,
+          "brier_score": null
+        },
+        "direction_classifier": {
+          "name": "Hermes direction classifier",
+          "observations": 224,
+          "mae": 0.998214,
+          "directional_accuracy": 0.5312,
+          "cumulative_return": 0.3884,
+          "max_drawdown": -0.1189,
+          "annualized_volatility": 0.1867,
+          "brier_score": 0.305862
+        }
+      },
+      "seconds": 44.81
+    },
+    "MSFT": {
+      "data_start": "2024-09-12 00:00:00+00:00",
+      "data_end": "2026-09-11 00:00:00+00:00",
+      "first_prediction_date": "2025-10-14 00:00:00+00:00",
+      "last_prediction_date": "2026-09-03 00:00:00+00:00",
+      "data_sha256": "7e785996ab76b156cd31af22b8854d5523bd133f32b424e6fa2e213d81d81070",
+      "strategies": {
+        "model": {
+          "name": "Hermes model",
+          "observations": 224,
+          "mae": 0.015747,
+          "directional_accuracy": 0.4911,
+          "cumulative_return": 0.0212,
+          "max_drawdown": -0.2201,
+          "annualized_volatility": 0.2578,
+          "brier_score": null
+        },
+        "deep_model": {
+          "name": "Hermes deep model",
+          "observations": 224,
+          "mae": 0.015143,
+          "directional_accuracy": 0.4777,
+          "cumulative_return": -0.1898,
+          "max_drawdown": -0.3886,
+          "annualized_volatility": 0.297,
+          "brier_score": null
+        },
+        "hybrid_model": {
+          "name": "Hermes hybrid model",
+          "observations": 224,
+          "mae": 0.015388,
+          "directional_accuracy": 0.4911,
+          "cumulative_return": 0.0205,
+          "max_drawdown": -0.2243,
+          "annualized_volatility": 0.2577,
+          "brier_score": null
+        },
+        "previous_day": {
+          "name": "Previous-day return",
+          "observations": 224,
+          "mae": 0.01996,
+          "directional_accuracy": 0.5446,
+          "cumulative_return": 0.1462,
+          "max_drawdown": -0.1509,
+          "annualized_volatility": 0.2287,
+          "brier_score": null
+        },
+        "buy_and_hold": {
+          "name": "Buy and hold",
+          "observations": 224,
+          "mae": 0.014446,
+          "directional_accuracy": 0.4955,
+          "cumulative_return": -0.019,
+          "max_drawdown": -0.345,
+          "annualized_volatility": 0.3396,
+          "brier_score": null
+        },
+        "five_day_model": {
+          "name": "Hermes five-day model",
+          "observations": 224,
+          "mae": 0.043896,
+          "directional_accuracy": 0.5,
+          "cumulative_return": 0.0236,
+          "max_drawdown": -0.2271,
+          "annualized_volatility": 0.2618,
+          "brier_score": null
+        },
+        "direction_classifier": {
+          "name": "Hermes direction classifier",
+          "observations": 224,
+          "mae": 0.999628,
+          "directional_accuracy": 0.4598,
+          "cumulative_return": 0.0188,
+          "max_drawdown": -0.3022,
+          "annualized_volatility": 0.2984,
+          "brier_score": 0.317277
+        }
+      },
+      "seconds": 44.78
+    },
+    "NVDA": {
+      "data_start": "2024-09-12 00:00:00+00:00",
+      "data_end": "2026-09-11 00:00:00+00:00",
+      "first_prediction_date": "2025-10-14 00:00:00+00:00",
+      "last_prediction_date": "2026-09-03 00:00:00+00:00",
+      "data_sha256": "4e832140dec3dc015e78669ddbdf0ce8cacc171a8d0c92acc6735acce192fe63",
+      "strategies": {
+        "model": {
+          "name": "Hermes model",
+          "observations": 224,
+          "mae": 0.020583,
+          "directional_accuracy": 0.5223,
+          "cumulative_return": 0.1656,
+          "max_drawdown": -0.2243,
+          "annualized_volatility": 0.3018,
+          "brier_score": null
+        },
+        "deep_model": {
+          "name": "Hermes deep model",
+          "observations": 224,
+          "mae": 0.021238,
+          "directional_accuracy": 0.4821,
+          "cumulative_return": 0.1463,
+          "max_drawdown": -0.1918,
+          "annualized_volatility": 0.2966,
+          "brier_score": null
+        },
+        "hybrid_model": {
+          "name": "Hermes hybrid model",
+          "observations": 224,
+          "mae": 0.020409,
+          "directional_accuracy": 0.5134,
+          "cumulative_return": 0.2379,
+          "max_drawdown": -0.1833,
+          "annualized_volatility": 0.3093,
+          "brier_score": null
+        },
+        "previous_day": {
+          "name": "Previous-day return",
+          "observations": 224,
+          "mae": 0.027271,
+          "directional_accuracy": 0.4955,
+          "cumulative_return": 0.001,
+          "max_drawdown": -0.2219,
+          "annualized_volatility": 0.2589,
+          "brier_score": null
+        },
+        "buy_and_hold": {
+          "name": "Buy and hold",
+          "observations": 224,
+          "mae": 0.018947,
+          "directional_accuracy": 0.5089,
+          "cumulative_return": 0.2812,
+          "max_drawdown": -0.2021,
+          "annualized_volatility": 0.3839,
+          "brier_score": null
+        },
+        "five_day_model": {
+          "name": "Hermes five-day model",
+          "observations": 224,
+          "mae": 0.041357,
+          "directional_accuracy": 0.5759,
+          "cumulative_return": 0.2335,
+          "max_drawdown": -0.178,
+          "annualized_volatility": 0.2934,
+          "brier_score": null
+        },
+        "direction_classifier": {
+          "name": "Hermes direction classifier",
+          "observations": 224,
+          "mae": 0.998874,
+          "directional_accuracy": 0.4821,
+          "cumulative_return": 0.2761,
+          "max_drawdown": -0.1706,
+          "annualized_volatility": 0.2967,
+          "brier_score": 0.32427
+        }
+      },
+      "seconds": 43.28
+    },
+    "AMZN": {
+      "data_start": "2024-09-12 00:00:00+00:00",
+      "data_end": "2026-09-11 00:00:00+00:00",
+      "first_prediction_date": "2025-10-14 00:00:00+00:00",
+      "last_prediction_date": "2026-09-03 00:00:00+00:00",
+      "data_sha256": "da96b80d6fa461b3dc72040b276237b99584e2cd3d996edb509e2d6afe1b9328",
+      "strategies": {
+        "model": {
+          "name": "Hermes model",
+          "observations": 224,
+          "mae": 0.017848,
+          "directional_accuracy": 0.4732,
+          "cumulative_return": 0.0039,
+          "max_drawdown": -0.1845,
+          "annualized_volatility": 0.2356,
+          "brier_score": null
+        },
+        "deep_model": {
+          "name": "Hermes deep model",
+          "observations": 224,
+          "mae": 0.016572,
+          "directional_accuracy": 0.5,
+          "cumulative_return": 0.0019,
+          "max_drawdown": -0.1928,
+          "annualized_volatility": 0.2935,
+          "brier_score": null
+        },
+        "hybrid_model": {
+          "name": "Hermes hybrid model",
+          "observations": 224,
+          "mae": 0.017185,
+          "directional_accuracy": 0.4821,
+          "cumulative_return": 0.0749,
+          "max_drawdown": -0.1301,
+          "annualized_volatility": 0.2291,
+          "brier_score": null
+        },
+        "previous_day": {
+          "name": "Previous-day return",
+          "observations": 224,
+          "mae": 0.021653,
+          "directional_accuracy": 0.5268,
+          "cumulative_return": 0.2794,
+          "max_drawdown": -0.1663,
+          "annualized_volatility": 0.2663,
+          "brier_score": null
+        },
+        "buy_and_hold": {
+          "name": "Buy and hold",
+          "observations": 224,
+          "mae": 0.015704,
+          "directional_accuracy": 0.5089,
+          "cumulative_return": 0.1946,
+          "max_drawdown": -0.2174,
+          "annualized_volatility": 0.353,
+          "brier_score": null
+        },
+        "five_day_model": {
+          "name": "Hermes five-day model",
+          "observations": 224,
+          "mae": 0.0462,
+          "directional_accuracy": 0.4821,
+          "cumulative_return": 0.1338,
+          "max_drawdown": -0.2038,
+          "annualized_volatility": 0.2953,
+          "brier_score": null
+        },
+        "direction_classifier": {
+          "name": "Hermes direction classifier",
+          "observations": 224,
+          "mae": 1.001584,
+          "directional_accuracy": 0.4464,
+          "cumulative_return": -0.0786,
+          "max_drawdown": -0.1463,
+          "annualized_volatility": 0.2143,
+          "brier_score": 0.308581
+        }
+      },
+      "seconds": 44.52
+    },
+    "TSLA": {
+      "data_start": "2024-09-12 00:00:00+00:00",
+      "data_end": "2026-09-11 00:00:00+00:00",
+      "first_prediction_date": "2025-10-14 00:00:00+00:00",
+      "last_prediction_date": "2026-09-03 00:00:00+00:00",
+      "data_sha256": "f68b2de291eaaac414950d631621f28f74a3ca14a3f16a8c4c76a02fc2f5bb24",
+      "strategies": {
+        "model": {
+          "name": "Hermes model",
+          "observations": 224,
+          "mae": 0.026332,
+          "directional_accuracy": 0.4598,
+          "cumulative_return": 0.0516,
+          "max_drawdown": -0.1754,
+          "annualized_volatility": 0.3163,
+          "brier_score": null
+        },
+        "deep_model": {
+          "name": "Hermes deep model",
+          "observations": 224,
+          "mae": 0.024354,
+          "directional_accuracy": 0.4554,
+          "cumulative_return": -0.2487,
+          "max_drawdown": -0.2923,
+          "annualized_volatility": 0.3339,
+          "brier_score": null
+        },
+        "hybrid_model": {
+          "name": "Hermes hybrid model",
+          "observations": 224,
+          "mae": 0.025326,
+          "directional_accuracy": 0.4554,
+          "cumulative_return": 0.067,
+          "max_drawdown": -0.1254,
+          "annualized_volatility": 0.3123,
+          "brier_score": null
+        },
+        "previous_day": {
+          "name": "Previous-day return",
+          "observations": 224,
+          "mae": 0.03265,
+          "directional_accuracy": 0.4911,
+          "cumulative_return": -0.3013,
+          "max_drawdown": -0.3037,
+          "annualized_volatility": 0.3058,
+          "brier_score": null
+        },
+        "buy_and_hold": {
+          "name": "Buy and hold",
+          "observations": 224,
+          "mae": 0.022442,
+          "directional_accuracy": 0.5089,
+          "cumulative_return": -0.1751,
+          "max_drawdown": -0.391,
+          "annualized_volatility": 0.4631,
+          "brier_score": null
+        },
+        "five_day_model": {
+          "name": "Hermes five-day model",
+          "observations": 224,
+          "mae": 0.057161,
+          "directional_accuracy": 0.4598,
+          "cumulative_return": -0.3699,
+          "max_drawdown": -0.4482,
+          "annualized_volatility": 0.3342,
+          "brier_score": null
+        },
+        "direction_classifier": {
+          "name": "Hermes direction classifier",
+          "observations": 224,
+          "mae": 1.000005,
+          "directional_accuracy": 0.4821,
+          "cumulative_return": -0.0847,
+          "max_drawdown": -0.237,
+          "annualized_volatility": 0.2988,
+          "brier_score": 0.318217
+        }
+      },
+      "seconds": 44.41
+    }
+  },
+  "pooled": {
+    "model": {
+      "observations": 1568,
+      "mae": 0.015826714285714284,
+      "directional_accuracy": 0.5006428571428572
+    },
+    "deep_model": {
+      "observations": 1568,
+      "mae": 0.015120714285714286,
+      "directional_accuracy": 0.48469999999999996
+    },
+    "hybrid_model": {
+      "observations": 1568,
+      "mae": 0.015350857142857142,
+      "directional_accuracy": 0.5031857142857142
+    },
+    "previous_day": {
+      "observations": 1568,
+      "mae": 0.02022157142857143,
+      "directional_accuracy": 0.5095714285714286
+    },
+    "buy_and_hold": {
+      "observations": 1568,
+      "mae": 0.014133000000000001,
+      "directional_accuracy": 0.5210142857142857
+    },
+    "five_day_model": {
+      "observations": 1568,
+      "mae": 0.037847,
+      "directional_accuracy": 0.49679999999999996
+    },
+    "direction_classifier": {
+      "observations": 1568,
+      "mae": 0.9996968571428572,
+      "directional_accuracy": 0.4885
+    }
+  }
+}

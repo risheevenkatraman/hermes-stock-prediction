@@ -8,8 +8,15 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import brier_score_loss, mean_absolute_error
 
-from .deep_model import predict_return
-from .model import _regression_model, _training_data, _validate_prices
+from .deep_model import predict_return, validation_split
+from .ensemble import select_blend
+from .model import (
+    _build_feature_frame,
+    _regression_model,
+    _training_data,
+    _up_probability,
+    _validate_prices,
+)
 
 
 @dataclass(frozen=True)
@@ -25,7 +32,7 @@ class StrategyMetrics:
 
 
 def _risk_metrics(strategy_returns: np.ndarray) -> tuple[float, float]:
-    equity = np.cumprod(1 + strategy_returns)
+    equity = np.concatenate(([1.0], np.cumprod(1 + strategy_returns)))
     drawdown = equity / np.maximum.accumulate(equity) - 1
     volatility = (
         float(np.std(strategy_returns, ddof=1) * np.sqrt(252))
@@ -33,27 +40,6 @@ def _risk_metrics(strategy_returns: np.ndarray) -> tuple[float, float]:
         else 0.0
     )
     return float(drawdown.min()), volatility
-
-
-def _classifier_model():
-    from sklearn.ensemble import HistGradientBoostingClassifier
-    from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import StandardScaler
-
-    return Pipeline(
-        [
-            ("scale", StandardScaler()),
-            (
-                "classifier",
-                HistGradientBoostingClassifier(
-                    max_iter=150,
-                    learning_rate=0.05,
-                    max_leaf_nodes=15,
-                    random_state=42,
-                ),
-            ),
-        ]
-    )
 
 
 def _directional_accuracy(actual: pd.Series, predicted: np.ndarray) -> float:
@@ -66,9 +52,11 @@ def _metrics(
     predicted: np.ndarray,
     *,
     probabilities: np.ndarray | None = None,
+    realized_returns: np.ndarray | None = None,
 ) -> StrategyMetrics:
     actual_values = actual.to_numpy()
-    returns = np.where(predicted > 0, actual_values, 0.0)
+    realized = actual_values if realized_returns is None else realized_returns
+    returns = np.where(predicted > 0, realized, 0.0)
     max_drawdown, annualized_volatility = _risk_metrics(returns)
     return StrategyMetrics(
         name=name,
@@ -107,8 +95,13 @@ def walk_forward_backtest(
         raise ValueError("step must be at least 1.")
 
     frame = _validate_prices(prices)
-    one_day_features, one_day_target = _training_data(frame, horizon=1)
-    five_day_features, five_day_target = _training_data(frame, horizon=5)
+    features = _build_feature_frame(frame)
+    one_day_features, one_day_target = _training_data(
+        frame, horizon=1, features=features
+    )
+    five_day_features, five_day_target = _training_data(
+        frame, horizon=5, features=features
+    )
     if (
         len(one_day_features) <= min_train_rows
         or len(five_day_features) <= min_train_rows
@@ -127,7 +120,7 @@ def walk_forward_backtest(
 
     for index in range(min_train_rows, len(five_day_features), step):
         one_day_model = _regression_model()
-        validation_start = max(30, int(index * 0.8))
+        validation_start = validation_split(index)
         validation_model = _regression_model()
         validation_model.fit(
             one_day_features.iloc[:validation_start],
@@ -135,14 +128,6 @@ def walk_forward_backtest(
         )
         statistical_validation_prediction = validation_model.predict(
             one_day_features.iloc[validation_start:index]
-        )
-        statistical_validation_mae = float(
-            np.mean(
-                np.abs(
-                    one_day_target.iloc[validation_start:index].to_numpy()
-                    - statistical_validation_prediction
-                )
-            )
         )
         one_day_model.fit(one_day_features.iloc[:index], one_day_target.iloc[:index])
         one_day_prediction = float(
@@ -153,9 +138,11 @@ def walk_forward_backtest(
             one_day_target.iloc[:index],
             one_day_features.iloc[[index]],
         )
-        deep_weight = (
-            0.3 if deep_result.validation_mae < statistical_validation_mae else 0.0
-        )
+        deep_weight = select_blend(
+            one_day_target.iloc[validation_start:index].to_numpy(),
+            statistical_validation_prediction,
+            deep_result.validation_predictions,
+        ).deep_weight
         model_predictions.append(one_day_prediction)
         deep_predictions.append(deep_result.predicted_return)
         hybrid_predictions.append(
@@ -166,23 +153,25 @@ def walk_forward_backtest(
         baseline_predictions.append(float(one_day_features.iloc[index]["return_1d"]))
 
         five_day_model = _regression_model()
-        five_day_model.fit(five_day_features.iloc[:index], five_day_target.iloc[:index])
+        # A five-day target is observable only at its endpoint. Index labels
+        # are positions in the validated price frame, even when features have gaps.
+        prediction_row = five_day_features.index[index]
+        known = five_day_features.index + 5 <= prediction_row
+        five_day_model.fit(five_day_features.loc[known], five_day_target.loc[known])
         five_day_predictions.append(
             float(five_day_model.predict(five_day_features.iloc[[index]])[0])
         )
         five_day_actual.append(float(five_day_target.iloc[index]))
 
-        classifier = _classifier_model()
-        classifier.fit(
-            one_day_features.iloc[:index],
-            (one_day_target.iloc[:index] > 0).astype(int),
+        probability = float(
+            _up_probability(
+                one_day_features.iloc[:index],
+                one_day_target.iloc[:index],
+                one_day_features.iloc[[index]],
+            )[0]
         )
-        classifier_predictions.append(
-            1.0 if classifier.predict(one_day_features.iloc[[index]])[0] else -1.0
-        )
-        classifier_probabilities.append(
-            float(classifier.predict_proba(one_day_features.iloc[[index]])[0, 1])
-        )
+        classifier_predictions.append(1.0 if probability > 0.5 else -1.0)
+        classifier_probabilities.append(probability)
 
     actual = pd.Series(one_day_actual)
     model_metrics = _metrics("Hermes model", actual, np.array(model_predictions))
@@ -212,6 +201,9 @@ def walk_forward_backtest(
         "Hermes five-day model",
         five_day_actual_series,
         np.array(five_day_predictions),
+        # Trade the five-day signal for the next day, rebalancing daily.
+        # Compounding overlapping five-day returns would count profits twice.
+        realized_returns=actual.to_numpy(),
     )
     classifier_metrics = _metrics(
         "Hermes direction classifier",

@@ -6,15 +6,22 @@ import asyncio
 import os
 from contextlib import asynccontextmanager, suppress
 from typing import Annotated
+from pathlib import Path
+from dataclasses import asdict
+from datetime import datetime, timezone
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from .backtest import serialize_metrics, walk_forward_backtest
 from .data import MarketDataError, fetch_daily_prices, latest_market_metadata
 from .model import InsufficientHistoryError, forecast
+from .direction_model import predict_direction
+from .news import NewsArticle, NewsProviderError, NewsStore, fetch_news, ticker_symbol
+from .news_features import session_closes
 from .trader_pipeline import build_recommendations, pipeline
 
 
@@ -41,7 +48,13 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="Hermes Prediction API", version="0.2.0", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173", "null"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173",
+        "null",
+    ],
     allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
@@ -168,16 +181,37 @@ def predict(request: PredictionRequest) -> dict:
 
 
 @app.get("/predict/live/{ticker}")
-def predict_live(ticker: str) -> dict:
+def predict_live(ticker: str, include_news: bool = False) -> dict:
     """Ingest current daily history and run the price-only prediction."""
     try:
         prices = fetch_daily_prices(ticker)
+        if include_news:
+            prices = prices.loc[
+                session_closes(prices) <= pd.Timestamp.now(tz="UTC")
+            ].reset_index(drop=True)
         result = forecast(prices)
     except (MarketDataError, InsufficientHistoryError, ValueError) as error:
         raise HTTPException(status_code=502, detail=str(error)) from error
 
+    direction_analysis = None
+    direction_error = None
+    if include_news:
+        try:
+            direction_analysis = predict_direction(
+                prices, NewsStore().articles(ticker), ticker
+            )
+        except ValueError as error:
+            direction_error = str(error)
     metadata = latest_market_metadata(prices)
     return {
+        **(
+            {
+                "direction_analysis": direction_analysis,
+                "direction_error": direction_error,
+            }
+            if include_news
+            else {}
+        ),
         "ticker": ticker.upper(),
         "horizon": "next trading day",
         "direction": result.direction,
@@ -211,7 +245,7 @@ def prices_live(
     range: str = Query(default="1D", pattern=r"^(1D|1W|1M|3M)$"),
 ) -> dict:
     """Return the recent daily bars used to render the trend chart."""
-    provider_period = {"1D": "3mo", "1W": "3mo", "1M": "3mo", "3M": "1y"}[range]
+    provider_period = "1y"
     visible_rows = {"1D": 2, "1W": 5, "1M": 22, "3M": 66}[range]
     try:
         prices = fetch_daily_prices(ticker, period=provider_period)
@@ -338,3 +372,112 @@ def backtest_multiple(
         "summary": summary,
         "disclaimer": "Historical backtests are not guarantees of future performance.",
     }
+
+
+class NewsInput(BaseModel):
+    ticker: str = Field(min_length=1, max_length=10)
+    title: str = Field(min_length=1, max_length=2000)
+    summary: str = Field(default="", max_length=20000)
+    url: str = Field(max_length=4000)
+    source: str = Field(max_length=200)
+    published_at: str
+    available_at: str | None = None
+    sentiment: float = Field(ge=-1, le=1, allow_inf_nan=False)
+    relevance: float = Field(ge=0, le=1, allow_inf_nan=False)
+    sentiment_model: str = Field(default="imported", max_length=200)
+
+
+class NewsImportRequest(BaseModel):
+    articles: Annotated[list[NewsInput], Field(min_length=1, max_length=5000)]
+
+
+@app.post("/news/import")
+def import_news(request: NewsImportRequest) -> dict:
+    """Import scored articles. Omitted availability means first observed now."""
+    now = datetime.now(timezone.utc)
+    try:
+        articles = []
+        for row in request.articles:
+            data = row.model_dump()
+            data["available_at"] = data["available_at"] or now.isoformat()
+            article = NewsArticle(**data)
+            if pd.Timestamp(article.available_at) > now:
+                raise ValueError("Article availability cannot be in the future.")
+            articles.append(article)
+        inserted = NewsStore().add(articles)
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    return {
+        "received": len(articles),
+        "inserted": inserted,
+        "duplicates": len(articles) - inserted,
+    }
+
+
+@app.post("/news/refresh/{ticker}")
+def refresh_news(
+    ticker: str, time_from: str | None = None, time_to: str | None = None
+) -> dict:
+    try:
+        articles = fetch_news(ticker, time_from=time_from, time_to=time_to)
+        store = NewsStore()
+        inserted = store.add(articles)
+        return {"inserted": inserted, "received": len(articles), **store.status(ticker)}
+    except NewsProviderError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+@app.get("/news/{ticker}")
+def company_news(ticker: str, limit: int = Query(default=20, ge=1, le=100)) -> dict:
+    try:
+        store = NewsStore()
+        articles = store.articles(ticker)
+        return {
+            **store.status(ticker),
+            "articles": [asdict(a) for a in articles[-limit:][::-1]],
+            "article_count": len(articles),
+        }
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+@app.get("/predict/direction/live/{ticker}")
+def live_direction(ticker: str, refresh_news_first: bool = False) -> dict:
+    """Experimental direction head; news refresh is explicit and never implicit."""
+    try:
+        symbol = ticker_symbol(ticker)
+        store = NewsStore()
+        if refresh_news_first:
+            store.add(fetch_news(symbol))
+        prices = fetch_daily_prices(symbol)
+        # In-progress provider daily bars must not become labeled training bars.
+        closes = session_closes(prices)
+        prices = prices.loc[closes <= pd.Timestamp.now(tz="UTC")].reset_index(drop=True)
+        return predict_direction(prices, store.articles(symbol), symbol)
+    except NewsProviderError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except MarketDataError as error:
+        raise HTTPException(status_code=502, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+# Serve only the application assets, never the repository or local archives.
+_FRONTEND_ROOT = Path(__file__).resolve().parent.parent
+
+
+@app.get("/", include_in_schema=False)
+def frontend_index():
+    return FileResponse(_FRONTEND_ROOT / "index.html")
+
+
+@app.get("/app.js", include_in_schema=False)
+def frontend_script():
+    return FileResponse(_FRONTEND_ROOT / "app.js", media_type="text/javascript")
+
+
+@app.get("/styles.css", include_in_schema=False)
+def frontend_styles():
+    return FileResponse(_FRONTEND_ROOT / "styles.css", media_type="text/css")

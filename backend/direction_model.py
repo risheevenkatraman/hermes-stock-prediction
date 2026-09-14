@@ -18,7 +18,6 @@ from .model import FEATURE_COLUMNS, _build_feature_frame, _validate_prices
 from .news import NewsArticle
 from .news_features import NEWS_COLUMNS, build_news_features, session_closes
 
-
 MIN_DIRECTION_ROWS = 120
 MIN_NEWS_DAYS = 30
 
@@ -82,7 +81,7 @@ def _select_policy(
     # Explicit always-up candidate; ties preserve this simpler baseline.
     best_accuracy = float(np.mean(labels == 1))
     best = (0.0, 0.0)
-    for weight in ((0.0, 0.25, 0.5) if news_allowed else (0.0,)):
+    for weight in (0.0, 0.25, 0.5) if news_allowed else (0.0,):
         probability = (1 - weight) * price + weight * news
         for threshold in (0.45, 0.5, 0.55):
             accuracy = float(np.mean((probability >= threshold) == labels))
@@ -188,7 +187,9 @@ def predict_direction(
         "news_tone": (
             "positive"
             if snapshot["news_sentiment"] > 0.15
-            else "negative" if snapshot["news_sentiment"] < -0.15 else "neutral"
+            else "negative"
+            if snapshot["news_sentiment"] < -0.15
+            else "neutral"
         ),
         "evaluation": metrics,
         "evaluation_start": str(frame.loc[train.index[selection_end], "date"]),

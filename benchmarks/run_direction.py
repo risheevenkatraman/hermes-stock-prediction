@@ -1,16 +1,17 @@
 """Development-only check of the direction head on saved price/news snapshots."""
 
 import argparse
-from datetime import datetime, timezone
-import importlib.metadata
 import hashlib
+import importlib.metadata
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 import pandas as pd
+
 from backend.direction_model import predict_direction
 from backend.news import NewsArticle
 

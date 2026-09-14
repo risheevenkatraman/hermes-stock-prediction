@@ -1,22 +1,23 @@
 """Run with python -m benchmarks.run_accuracy; --cached reuses saved prices."""
 
 import argparse
-from datetime import datetime, timezone
 import hashlib
 import importlib.metadata
 import json
 import os
-from pathlib import Path
 import time
+from datetime import datetime, timezone
+from pathlib import Path
 
 # Configure before importing numerical libraries; production functions stay untouched.
 os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
 import pandas as pd
-from backend.backtest import walk_forward_backtest, serialize_metrics
+
+from backend.backtest import serialize_metrics, walk_forward_backtest
 from backend.data import fetch_daily_prices
-from backend.model import _validate_prices, _training_data
+from backend.model import _training_data, _validate_prices
 
 
 def main():

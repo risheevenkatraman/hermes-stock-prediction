@@ -14,11 +14,13 @@ def main():
         "",
         f"Run: {report['created_at']}",
         "",
-        "Yahoo Finance adjusted daily prices, two years per ticker. Expanding-window "
-        "walk-forward evaluation starts after 252 usable training rows. All models "
-        "refit for each prediction; neural blend weights use only the earlier "
-        "selection portion of that training window. No hyperparameters were tuned "
-        "against these benchmark results.",
+        (
+            "Yahoo Finance adjusted daily prices, two years per ticker. Expanding-window "
+            "walk-forward evaluation starts after 252 usable training rows. All models "
+            "refit for each prediction; neural blend weights use only the earlier "
+            "selection portion of that training window. No hyperparameters were tuned "
+            "against these benchmark results."
+        ),
         "",
         "## Pooled next-day results",
         "",
@@ -38,8 +40,10 @@ def main():
         )
     lines += [
         "",
-        "The last row uses always-up predictions for direction and zero-return "
-        "predictions for MAE; these are two separate baseline definitions.",
+        (
+            "The last row uses always-up predictions for direction and zero-return "
+            "predictions for MAE; these are two separate baseline definitions."
+        ),
         "",
         "## Per-ticker results",
         "",

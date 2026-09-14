@@ -1,10 +1,10 @@
 ﻿"""Browser interaction tests. API fixtures exist only here, never in the app."""
 
+import json
+import sys
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-import json
 from pathlib import Path
-import sys
 from threading import Thread
 from urllib.parse import urlsplit
 

@@ -235,6 +235,7 @@ def test_features_do_not_depend_on_future_prices():
 
 def test_backtest_only_trains_on_observable_targets(monkeypatch):
     from types import SimpleNamespace
+
     from backend import backtest
 
     class RecordingRegressor:

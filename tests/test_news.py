@@ -1,39 +1,39 @@
-from dataclasses import replace
 import json
+from dataclasses import replace
 
 import exchange_calendars as xcals
-from fastapi.testclient import TestClient
 import numpy as np
 import pandas as pd
 import pytest
+from fastapi.testclient import TestClient
 
+from backend.direction_model import (
+    _predict_probability,
+    _select_policy,
+    predict_direction,
+)
 from backend.main import app
 from backend.news import (
     NewsArticle,
-    NewsStore,
     NewsProviderError,
+    NewsStore,
     normalize_alpha_vantage,
 )
 from backend.news_features import build_news_features, session_closes
-from backend.direction_model import (
-    predict_direction,
-    _select_policy,
-    _predict_probability,
-)
 
 
 def article(**overrides):
-    values = dict(
-        ticker="AAPL",
-        title="Company raises earnings outlook",
-        summary="Profit exceeds expectations",
-        url="https://example.com/news/1",
-        source="test",
-        published_at="2025-01-06T18:00:00Z",
-        available_at="2025-01-06T18:01:00Z",
-        sentiment=0.7,
-        relevance=0.9,
-    )
+    values = {
+        "ticker": "AAPL",
+        "title": "Company raises earnings outlook",
+        "summary": "Profit exceeds expectations",
+        "url": "https://example.com/news/1",
+        "source": "test",
+        "published_at": "2025-01-06T18:00:00Z",
+        "available_at": "2025-01-06T18:01:00Z",
+        "sentiment": 0.7,
+        "relevance": 0.9,
+    }
     return NewsArticle(**(values | overrides))
 
 
@@ -44,13 +44,13 @@ def prices(rows=220):
     rng = np.random.default_rng(3)
     close = 100 * np.exp(np.cumsum(rng.normal(0.0004, 0.01, len(dates))))
     return pd.DataFrame(
-        dict(
-            date=dates,
-            close=close,
-            high=close + 1,
-            low=close - 1,
-            volume=rng.integers(1000, 10000, len(dates)),
-        )
+        {
+            "date": dates,
+            "close": close,
+            "high": close + 1,
+            "low": close - 1,
+            "volume": rng.integers(1000, 10000, len(dates)),
+        }
     )
 
 
@@ -281,6 +281,7 @@ def test_import_is_atomic_for_invalid_article(tmp_path, monkeypatch):
 
 def test_provider_fetch_normalizes_response_and_caps_history(monkeypatch):
     from io import BytesIO
+
     from backend import news
 
     monkeypatch.setenv("ALPHAVANTAGE_API_KEY", "test-key")
@@ -318,6 +319,7 @@ def test_provider_fetch_normalizes_response_and_caps_history(monkeypatch):
 
 def test_provider_error_does_not_expose_api_key(monkeypatch):
     from urllib.error import URLError
+
     from backend import news
 
     monkeypatch.setenv("ALPHAVANTAGE_API_KEY", "test-key")

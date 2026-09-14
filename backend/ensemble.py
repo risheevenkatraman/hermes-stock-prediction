@@ -1,6 +1,7 @@
 """Shared chronological blend selection for live and walk-forward forecasts."""
 
 from dataclasses import dataclass
+
 import numpy as np
 
 

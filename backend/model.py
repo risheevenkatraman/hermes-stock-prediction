@@ -239,7 +239,9 @@ def forecast(prices: pd.DataFrame) -> Forecast:
     direction = (
         "up"
         if predicted_return > 0.002
-        else "down" if predicted_return < -0.002 else "flat"
+        else "down"
+        if predicted_return < -0.002
+        else "flat"
     )
     return Forecast(
         predicted_return=round(predicted_return, 6),
@@ -266,7 +268,9 @@ def forecast(prices: pd.DataFrame) -> Forecast:
         five_day_direction=(
             "up"
             if five_day_return > 0.005
-            else "down" if five_day_return < -0.005 else "flat"
+            else "down"
+            if five_day_return < -0.005
+            else "flat"
         ),
         direction_probability=round(direction_probability, 3),
         deep_predicted_return=round(deep_result.predicted_return, 6),

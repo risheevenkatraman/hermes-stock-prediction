@@ -2,6 +2,7 @@
 
 Usage: python -m backend.publish --tickers AAPL,MSFT,NVDA
 """
+
 import argparse
 from datetime import datetime, timedelta, timezone
 import hashlib
@@ -22,7 +23,9 @@ def publish(ticker: str):
     result = forecast(prices)
     now = datetime.now(timezone.utc)
     # Version includes research source content so code changes produce new versions.
-    source = b"".join(path.read_bytes() for path in sorted(Path(__file__).parent.glob("*.py")))
+    source = b"".join(
+        path.read_bytes() for path in sorted(Path(__file__).parent.glob("*.py"))
+    )
     payload = {
         "ticker": symbol,
         "published_at": now.isoformat(),
@@ -30,13 +33,27 @@ def publish(ticker: str):
         "model_version": hashlib.sha256(source).hexdigest()[:12],
         "data_hash": hashlib.sha256(prices.to_csv(index=False).encode()).hexdigest(),
         "market_data": latest_market_metadata(prices),
-        "prices": [{"date": str(row.date), "close": float(row.close)} for row in prices.itertuples()],
-        "forecasts": [
-            {"horizon": 1, "expected_price": result.expected_price, "predicted_return": result.predicted_return},
-            {"horizon": 5, "expected_price": round(float(prices.iloc[-1].close) * (1 + result.five_day_return), 2),
-             "predicted_return": result.five_day_return},
+        "prices": [
+            {"date": str(row.date), "close": float(row.close)}
+            for row in prices.itertuples()
         ],
-        "news": [asdict(article) for article in NewsStore().articles(symbol)[-6:][::-1]],
+        "forecasts": [
+            {
+                "horizon": 1,
+                "expected_price": result.expected_price,
+                "predicted_return": result.predicted_return,
+            },
+            {
+                "horizon": 5,
+                "expected_price": round(
+                    float(prices.iloc[-1].close) * (1 + result.five_day_return), 2
+                ),
+                "predicted_return": result.five_day_return,
+            },
+        ],
+        "news": [
+            asdict(article) for article in NewsStore().articles(symbol)[-6:][::-1]
+        ],
         "status": "experimental",
         "limitations": "Price-only experimental model. Calibrated intervals and horizons 2–4 are not available. No demonstrated baseline advantage.",
     }
@@ -44,10 +61,21 @@ def publish(ticker: str):
     bucket = os.getenv("RESEARCH_BUCKET")
     if bucket:
         import boto3
+
         prefix = f"research/{symbol}/{now.strftime('%Y%m%dT%H%M%S%fZ')}"
         client = boto3.client("s3")
-        client.put_object(Bucket=bucket, Key=f"{prefix}/snapshot.json", Body=json.dumps(payload).encode(), ContentType="application/json")
-        client.put_object(Bucket=bucket, Key=f"{prefix}/prices.csv", Body=prices.to_csv(index=False).encode(), ContentType="text/csv")
+        client.put_object(
+            Bucket=bucket,
+            Key=f"{prefix}/snapshot.json",
+            Body=json.dumps(payload).encode(),
+            ContentType="application/json",
+        )
+        client.put_object(
+            Bucket=bucket,
+            Key=f"{prefix}/prices.csv",
+            Body=prices.to_csv(index=False).encode(),
+            ContentType="text/csv",
+        )
     save_record(research, symbol, payload)
 
 

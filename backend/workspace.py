@@ -1,4 +1,5 @@
 """Customer APIs: user-owned settings and precomputed research only."""
+
 from datetime import datetime, timezone
 from typing import Literal
 
@@ -22,7 +23,9 @@ class Profile(BaseModel):
 
 class Workspace(BaseModel):
     profile: Profile = Field(default_factory=Profile)
-    watchlist: list[str] = Field(default_factory=lambda: ["AAPL", "MSFT", "NVDA", "AMZN"], max_length=50)
+    watchlist: list[str] = Field(
+        default_factory=lambda: ["AAPL", "MSFT", "NVDA", "AMZN"], max_length=50
+    )
 
     @field_validator("watchlist")
     @classmethod

@@ -1,0 +1,4 @@
+# Match the Python version used by the deployment image.
+target-version = "py312"
+line-length = 88
+extend-exclude = ["test-results", "playwright-report", "docs", "node_modules"]

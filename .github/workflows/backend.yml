@@ -2,10 +2,30 @@ name: Check backend deployment
 
 on:
   pull_request:
-    paths: ["backend/**", "tests/**", "requirements*.txt", "Dockerfile", ".dockerignore", "compose.yaml", "deploy/**", ".github/workflows/backend.yml"]
+    paths:
+      [
+        "backend/**",
+        "tests/**",
+        "requirements*.txt",
+        "Dockerfile",
+        ".dockerignore",
+        "compose.yaml",
+        "deploy/**",
+        ".github/workflows/backend.yml",
+      ]
   push:
     branches: [main]
-    paths: ["backend/**", "tests/**", "requirements*.txt", "Dockerfile", ".dockerignore", "compose.yaml", "deploy/**", ".github/workflows/backend.yml"]
+    paths:
+      [
+        "backend/**",
+        "tests/**",
+        "requirements*.txt",
+        "Dockerfile",
+        ".dockerignore",
+        "compose.yaml",
+        "deploy/**",
+        ".github/workflows/backend.yml",
+      ]
   workflow_dispatch:
 
 permissions:

@@ -10,7 +10,9 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "format": "prettier --write \"*.{js,jsx,ts,tsx,json,css,md,yml,yaml}\" \"{app,web,backend,tests,benchmarks,deploy,docs,.github}/**/*.{js,jsx,ts,tsx,json,css,md,yml,yaml}\" \".prettierrc.json\" --ignore-path .prettierignore",
+    "format:check": "prettier --check \"*.{js,jsx,ts,tsx,json,css,md,yml,yaml}\" \"{app,web,backend,tests,benchmarks,deploy,docs,.github}/**/*.{js,jsx,ts,tsx,json,css,md,yml,yaml}\" \".prettierrc.json\" --ignore-path .prettierignore"
   },
   "dependencies": {
     "@fontsource/dm-sans": "^5.3.0",
@@ -26,6 +28,7 @@
     "@types/node": "22.20.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
+    "prettier": "3.9.9",
     "typescript": "5.9.3"
   }
 }

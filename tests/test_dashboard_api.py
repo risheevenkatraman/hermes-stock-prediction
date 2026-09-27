@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 import pytest
 from fastapi.testclient import TestClient
 
@@ -20,7 +20,14 @@ def test_daily_bars_exclude_an_unfinished_early_close():
 
 def test_api_does_not_serve_legacy_frontend_or_repository():
     client = TestClient(app)
-    for path in ["/", "/app.js", "/styles.css", "/backend/main.py", "/.git/config", "/data/news.sqlite3"]:
+    for path in [
+        "/",
+        "/app.js",
+        "/styles.css",
+        "/backend/main.py",
+        "/.git/config",
+        "/data/news.sqlite3",
+    ]:
         assert client.get(path).status_code == 404
 
 

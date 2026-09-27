@@ -1,32 +1,32 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: Hermes identity and research storage. No compute or database is launched.
 Parameters:
   AppUrl:
     Type: String
     Description: Frontend origin without a trailing slash
-    AllowedPattern: 'https://[^/]+|http://localhost:3000'
+    AllowedPattern: "https://[^/]+|http://localhost:3000"
   DomainPrefix:
     Type: String
     Description: Globally unique Cognito hosted domain prefix
-    AllowedPattern: '[a-z0-9][a-z0-9-]{1,61}[a-z0-9]'
+    AllowedPattern: "[a-z0-9][a-z0-9-]{1,61}[a-z0-9]"
   GoogleClientId:
     Type: String
-    Default: ''
+    Default: ""
   GoogleClientSecret:
     Type: String
-    Default: ''
+    Default: ""
     NoEcho: true
 Conditions:
   UseGoogle: !And
-    - !Not [!Equals [!Ref GoogleClientId, '']]
-    - !Not [!Equals [!Ref GoogleClientSecret, '']]
+    - !Not [!Equals [!Ref GoogleClientId, ""]]
+    - !Not [!Equals [!Ref GoogleClientSecret, ""]]
 Resources:
   UserPool:
     Type: AWS::Cognito::UserPool
     DeletionPolicy: Retain
     UpdateReplacePolicy: Retain
     Properties:
-      UserPoolName: !Sub '${AWS::StackName}-users'
+      UserPoolName: !Sub "${AWS::StackName}-users"
       UsernameAttributes: [email]
       UsernameConfiguration:
         CaseSensitive: false
@@ -56,7 +56,7 @@ Resources:
       ProviderDetails:
         client_id: !Ref GoogleClientId
         client_secret: !Ref GoogleClientSecret
-        authorize_scopes: 'openid email profile'
+        authorize_scopes: "openid email profile"
       AttributeMapping:
         email: email
         email_verified: email_verified
@@ -69,9 +69,10 @@ Resources:
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows: [code]
       AllowedOAuthScopes: [openid, email, profile]
-      CallbackURLs: [!Sub '${AppUrl}/']
-      LogoutURLs: [!Sub '${AppUrl}/']
-      SupportedIdentityProviders: !If [UseGoogle, [COGNITO, !Ref GoogleProvider], [COGNITO]]
+      CallbackURLs: [!Sub "${AppUrl}/"]
+      LogoutURLs: [!Sub "${AppUrl}/"]
+      SupportedIdentityProviders:
+        !If [UseGoogle, [COGNITO, !Ref GoogleProvider], [COGNITO]]
       PreventUserExistenceErrors: ENABLED
       EnableTokenRevocation: true
       AccessTokenValidity: 15
@@ -113,21 +114,22 @@ Resources:
     Properties:
       Bucket: !Ref ResearchBucket
       PolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Deny
-            Principal: '*'
-            Action: 's3:*'
-            Resource: [!GetAtt ResearchBucket.Arn, !Sub '${ResearchBucket.Arn}/*']
+            Principal: "*"
+            Action: "s3:*"
+            Resource:
+              [!GetAtt ResearchBucket.Arn, !Sub "${ResearchBucket.Arn}/*"]
             Condition:
               Bool:
-                aws:SecureTransport: 'false'
+                aws:SecureTransport: "false"
 Outputs:
   CognitoUserPoolId:
     Value: !Ref UserPool
   CognitoClientId:
     Value: !Ref UserPoolClient
   CognitoDomain:
-    Value: !Sub '${DomainPrefix}.auth.${AWS::Region}.amazoncognito.com'
+    Value: !Sub "${DomainPrefix}.auth.${AWS::Region}.amazoncognito.com"
   ResearchBucketName:
     Value: !Ref ResearchBucket

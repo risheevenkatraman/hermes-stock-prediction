@@ -11,9 +11,16 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Hermes — Invest with perspective",
-  description: "A considered approach to stock research. Explore market history, experimental forecasts, and your investment goals.",
+  description:
+    "A considered approach to stock research. Explore market history, experimental forecasts, and your investment goals.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}</body></html>;
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
 }

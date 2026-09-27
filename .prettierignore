@@ -1,0 +1,27 @@
+# Formatting includes local docs, but excludes generated files and local state.
+.git/
+.next/
+node_modules/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+__pycache__/
+test-results/
+playwright-report/
+tests/browser_artifacts/
+data/
+backups/
+logs/
+build/
+dist/
+out/
+.coverage*
+htmlcov/
+.aws/
+.docker/
+.env*
+*.tsbuildinfo
+package-lock.json
+next-env.d.ts

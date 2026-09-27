@@ -1,43 +1,7 @@
-import json
-
 import pytest
 from fastapi.testclient import TestClient
 
 from backend import main
-from scripts.build_pages import build
-
-
-def test_pages_artifact_contains_only_public_assets(tmp_path):
-    destination = tmp_path / "pages"
-    build(destination, "https://api.example.com/")
-    assert {p.name for p in destination.iterdir()} == {
-        "index.html",
-        "styles.css",
-        "app.js",
-        "config.js",
-        ".nojekyll",
-    }
-    config = (destination / "config.js").read_text()
-    assert json.loads(
-        config.removeprefix("window.HERMES_CONFIG = ").strip().removesuffix(";")
-    ) == {"apiBase": "https://api.example.com"}
-
-
-@pytest.mark.parametrize(
-    "url",
-    [
-        "",
-        "http://api.example.com",
-        "https://user:secret@example.com",
-        "https://example.com/repo",
-        "https://example.com?key=secret",
-        "https://example.com#fragment",
-        "https://example.com:bad",
-    ],
-)
-def test_pages_rejects_invalid_api_configuration(tmp_path, url):
-    with pytest.raises(ValueError):
-        build(tmp_path / "pages", url)
 
 
 @pytest.mark.parametrize(
@@ -50,6 +14,10 @@ def test_pages_rejects_invalid_api_configuration(tmp_path, url):
         ("GET", "/backtest/live?tickers=SPY&period=1y"),
         ("GET", "/predict/direction/live/SPY?refresh_news_first=true"),
         ("GET", "/recommendations/live?refresh=true"),
+        ("GET", "/predict/live/AAPL"),
+        ("GET", "/predict/direction/live/AAPL"),
+        ("POST", "/predict"),
+        ("GET", "/prices/live/AAPL"),
     ],
 )
 def test_production_rejects_anonymous_admin_operations(
@@ -71,7 +39,7 @@ def test_admin_token_and_public_reads(monkeypatch):
     monkeypatch.setattr(main.pipeline, "refresh", lambda: [])
     client = TestClient(main.app)
     assert client.get("/health").status_code == 200
-    assert client.get("/config.js").status_code == 200
+    assert client.get("/config.js").status_code == 404
     assert (
         client.post(
             "/trader-pipeline/refresh", headers={"X-Hermes-Admin-Token": "test-secret"}

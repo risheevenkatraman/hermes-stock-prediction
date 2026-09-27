@@ -18,7 +18,6 @@ COPY requirements.txt ./
 RUN python -m pip install 'torch>=2.6,<3' --index-url https://download.pytorch.org/whl/cpu \
     && python -m pip install -r requirements.txt
 COPY backend/ ./backend/
-COPY index.html styles.css app.js config.js ./
 USER hermes
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \

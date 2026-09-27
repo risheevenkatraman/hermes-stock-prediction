@@ -8,13 +8,11 @@ import secrets
 from contextlib import asynccontextmanager, suppress
 from dataclasses import asdict
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Annotated
 
 import pandas as pd
 from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from .backtest import serialize_metrics, walk_forward_backtest
@@ -24,6 +22,8 @@ from .model import InsufficientHistoryError, forecast
 from .news import NewsArticle, NewsProviderError, NewsStore, fetch_news, ticker_symbol
 from .news_features import session_closes
 from .trader_pipeline import build_recommendations, pipeline
+from .storage import initialize
+from .workspace import router as workspace_router
 
 
 async def _scheduled_trader_refresh() -> None:
@@ -37,6 +37,8 @@ async def _scheduled_trader_refresh() -> None:
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    if os.getenv("HERMES_DEPLOYMENT", "local") != "production":
+        initialize()
     refresh_task = asyncio.create_task(_scheduled_trader_refresh())
     try:
         yield
@@ -46,7 +48,8 @@ async def lifespan(_: FastAPI):
             await refresh_task
 
 
-app = FastAPI(title="Hermes Prediction API", version="0.2.0", lifespan=lifespan)
+app = FastAPI(title="Hermes Research API", version="0.3.0", lifespan=lifespan)
+app.include_router(workspace_router)
 
 
 def require_admin(request: Request) -> None:
@@ -85,7 +88,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins(),
     allow_credentials=False,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PUT"],
     allow_headers=["*"],
 )
 
@@ -126,7 +129,7 @@ def refresh_trader_pipeline() -> dict[str, object]:
     }
 
 
-@app.get("/recommendations/live")
+@app.get("/recommendations/live", dependencies=[Depends(require_admin)])
 def recommendations_live(
     request: Request,
     refresh: bool = Query(default=True),
@@ -175,7 +178,7 @@ def recommendations_live(
     }
 
 
-@app.post("/predict")
+@app.post("/predict", dependencies=[Depends(require_admin)])
 def predict(request: PredictionRequest) -> dict:
     try:
         result = forecast(pd.DataFrame([row.model_dump() for row in request.prices]))
@@ -211,7 +214,7 @@ def predict(request: PredictionRequest) -> dict:
     }
 
 
-@app.get("/predict/live/{ticker}")
+@app.get("/predict/live/{ticker}", dependencies=[Depends(require_admin)])
 def predict_live(ticker: str, include_news: bool = False) -> dict:
     """Ingest current daily history and run the price-only prediction."""
     try:
@@ -270,7 +273,7 @@ def predict_live(ticker: str, include_news: bool = False) -> dict:
     }
 
 
-@app.get("/prices/live/{ticker}")
+@app.get("/prices/live/{ticker}", dependencies=[Depends(require_admin)])
 def prices_live(
     ticker: str,
     range: str = Query(default="1D", pattern=r"^(1D|1W|1M|3M)$"),
@@ -474,7 +477,7 @@ def company_news(ticker: str, limit: int = Query(default=20, ge=1, le=100)) -> d
         raise HTTPException(status_code=422, detail=str(error)) from error
 
 
-@app.get("/predict/direction/live/{ticker}")
+@app.get("/predict/direction/live/{ticker}", dependencies=[Depends(require_admin)])
 def live_direction(
     ticker: str, request: Request, refresh_news_first: bool = False
 ) -> dict:
@@ -497,27 +500,3 @@ def live_direction(
         raise HTTPException(status_code=502, detail=str(error)) from error
     except ValueError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
-
-
-# Serve only the application assets, never the repository or local archives.
-_FRONTEND_ROOT = Path(__file__).resolve().parent.parent
-
-
-@app.get("/", include_in_schema=False)
-def frontend_index():
-    return FileResponse(_FRONTEND_ROOT / "index.html")
-
-
-@app.get("/app.js", include_in_schema=False)
-def frontend_script():
-    return FileResponse(_FRONTEND_ROOT / "app.js", media_type="text/javascript")
-
-
-@app.get("/config.js", include_in_schema=False)
-def frontend_config():
-    return FileResponse(_FRONTEND_ROOT / "config.js", media_type="text/javascript")
-
-
-@app.get("/styles.css", include_in_schema=False)
-def frontend_styles():
-    return FileResponse(_FRONTEND_ROOT / "styles.css", media_type="text/css")

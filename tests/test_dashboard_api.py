@@ -18,14 +18,9 @@ def test_daily_bars_exclude_an_unfinished_early_close():
     assert len(prices) == 2
 
 
-def test_frontend_is_served_without_exposing_the_repository():
+def test_api_does_not_serve_legacy_frontend_or_repository():
     client = TestClient(app)
-    response = client.get("/")
-    assert response.status_code == 200
-    assert "Understand the signal." in response.text
-    assert client.get("/app.js").status_code == 200
-    assert client.get("/styles.css").status_code == 200
-    for path in ["/backend/main.py", "/.git/config", "/data/news.sqlite3"]:
+    for path in ["/", "/app.js", "/styles.css", "/backend/main.py", "/.git/config", "/data/news.sqlite3"]:
         assert client.get(path).status_code == 404
 
 

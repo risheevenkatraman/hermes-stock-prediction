@@ -2,10 +2,10 @@ name: Check backend deployment
 
 on:
   pull_request:
-    paths: ["backend/**", "tests/**", "requirements*.txt", "Dockerfile", ".dockerignore", "compose.yaml", "deploy/**", "scripts/**", ".github/workflows/backend.yml"]
+    paths: ["backend/**", "tests/**", "requirements*.txt", "Dockerfile", ".dockerignore", "compose.yaml", "deploy/**", ".github/workflows/backend.yml"]
   push:
     branches: [main]
-    paths: ["backend/**", "tests/**", "requirements*.txt", "Dockerfile", ".dockerignore", "compose.yaml", "deploy/**", "scripts/**", ".github/workflows/backend.yml"]
+    paths: ["backend/**", "tests/**", "requirements*.txt", "Dockerfile", ".dockerignore", "compose.yaml", "deploy/**", ".github/workflows/backend.yml"]
   workflow_dispatch:
 
 permissions:
@@ -27,7 +27,7 @@ jobs:
         run: docker compose build api
       - name: Run backend tests inside the image
         run: |
-          docker run --rm --user root -v "$PWD/tests:/app/tests:ro" -v "$PWD/scripts:/app/scripts:ro" hermes-api:local sh -c 'pip install "pytest>=8,<9" "httpx>=0.27,<1" && python -m pytest -q --ignore=tests/test_frontend.py'
+          docker run --rm --user root -v "$PWD/tests:/app/tests:ro" hermes-api:local sh -c 'pip install "pytest>=8,<9" "httpx>=0.27,<1" && python -m pytest -q'
       - name: Validate proxy configuration
         run: docker compose run --rm --no-deps caddy caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
       - name: Smoke test deployed API settings

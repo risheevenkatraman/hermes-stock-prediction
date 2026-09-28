@@ -11,6 +11,7 @@ services:
       HERMES_ADMIN_TOKEN: ${HERMES_ADMIN_TOKEN:?Set HERMES_ADMIN_TOKEN in .env}
       CORS_ORIGINS: ${CORS_ORIGINS:?Set CORS_ORIGINS in .env}
       NEWS_DB_PATH: /data/news.sqlite3
+      FORECAST_ARCHIVE_DIR: /data/forecast-history
     volumes:
       - news_data:/data
     # No host port: public API traffic must pass through HTTPS on Caddy.

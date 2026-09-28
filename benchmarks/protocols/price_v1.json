@@ -1,0 +1,15 @@
+{
+  "name": "price-v1",
+  "symbols": ["SPY", "QQQ", "AAPL", "MSFT", "NVDA", "AMZN", "TSLA"],
+  "horizons": [1, 2, 3, 4, 5],
+  "development_start": "2025-10-20",
+  "development_end": "2026-09-11",
+  "holdout_start": "2026-09-28",
+  "holdout_end": "2026-12-31",
+  "min_train_rows": 252,
+  "step": 1,
+  "calendar": "XNYS",
+  "candidate": "price_gbt_v1",
+  "primary_metric": "return_mae",
+  "notes": "Development only: the historical basket and dates have already been inspected. Start is October 20 so all five horizons have at least 252 fully observed training labels in the cached history. The future holdout is reserved, not yet collected or scored. SPY and QQQ are benchmark ETFs; this selected universe does not establish broad-market performance."
+}

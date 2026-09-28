@@ -22,6 +22,22 @@ are not used by the customer dashboard.
 
 ## Limits and next milestones
 
+The model-development foundation now includes a fixed five-horizon evaluation
+protocol, reproducible experiment directories, and shadow forecasts with saved
+estimators. [The first development report](benchmarks/results/price_v1_development.md)
+evaluated 7,700 price-only candidate forecasts; return MAE was worse than the
+zero-return baseline at every horizon. This is a baseline, not a validated upgrade.
+
+Research commands are `python -m benchmarks.experiment --data-dir benchmarks/results`
+and `python -m benchmarks.shadow --fetch`. Full inputs, predictions, source snapshots,
+and metrics live under ignored `data/experiments`; shadow estimators and dated
+forecasts live under `data/shadow-forecasts`. The shadow command does not update
+customer-facing research. Local instructions are in `docs/modeling.md`.
+
+Publication also preserves a separate forecast history before updating the latest
+dashboard row. On EC2 the archive is stored in the existing persistent `/data`
+volume and optionally uploaded to S3. This requires deploying the updated worker.
+
 This is a working application foundation, not a customer-ready investment adviser.
 No AWS deployment or real OAuth round-trip has been verified. Deployment, local
 setup, and operating instructions live in the local-only
@@ -37,6 +53,6 @@ setup, and operating instructions live in the local-only
   recommendations. Saved budgets/goals do not yet drive a validated ranker.
 - News is separate context; the three-stream model and verified trader track
   records remain research work.
-- Long-term fundamentals, licensed production data, model artifact persistence,
+- Long-term fundamentals, licensed production data, customer model promotion,
   migrations, rate limits, and production operations remain milestones.
 - Research currently assumes US exchanges and USD.

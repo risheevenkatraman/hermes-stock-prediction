@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Hub } from "aws-amplify/utils";
 import {
   ArrowDownRight,
@@ -217,9 +218,14 @@ export default function Dashboard() {
       </a>
       <aside className="sidebar">
         <a href="/" className="brand" aria-label="Hermes home">
-          <span className="brand-mark">
-            h<span>↗</span>
-          </span>
+          <Image
+            className="brand-mark"
+            src="/branding/hermes-logo.png"
+            alt=""
+            width={56}
+            height={56}
+            priority
+          />
           <span>
             hermes<span className="brand-period">.</span>
           </span>
@@ -599,12 +605,36 @@ export default function Dashboard() {
                       <div className="long-term-note">
                         <ShieldCheck size={22} />
                         <div>
-                          <strong>
-                            A longer horizon needs a broader picture.
-                          </strong>
+                          <strong>Long-term direction</strong>
+                          {[6, 12].map((months) => {
+                            const outlook = research.long_term?.find(
+                              (item) => item.months === months,
+                            );
+                            const label = !outlook
+                              ? "Not published — awaiting validation"
+                              : outlook.signal === "positive"
+                                ? "Positive outlook"
+                                : outlook.signal === "negative_or_flat"
+                                  ? "Negative or flat outlook"
+                                  : "Uncertain outlook";
+                            return (
+                              <p key={months}>
+                                <strong>{months} months:</strong> {label}
+                                {outlook && (
+                                  <small>
+                                    {" "}
+                                    Experimental · As of {outlook.as_of}
+                                    {research.stale ? " · Stale snapshot" : ""}
+                                  </small>
+                                )}
+                              </p>
+                            );
+                          })}
                           <p>
-                            Explore price history here. Fundamental analysis and
-                            long-term rankings are still in development.
+                            Direction signals estimate positive versus
+                            nonpositive returns, not a precise future price.
+                            These research signals are not yet used to recommend
+                            purchases.
                           </p>
                         </div>
                       </div>

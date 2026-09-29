@@ -1,0 +1,15 @@
+{
+  "mode": "fixed_sector",
+  "market_proxy": "SPY",
+  "price_basis": "split_and_dividend_adjusted_close",
+  "price_vintage": "revised_historical_snapshot",
+  "source": "Yahoo Finance snapshot 20260928T220147197512Z-37e2dbec; fixed sector research assumptions, not historically verified membership",
+  "memberships": [],
+  "fixed_sector_proxies": {
+    "AAPL": "XLK",
+    "MSFT": "XLK",
+    "NVDA": "XLK",
+    "AMZN": "XLY",
+    "TSLA": "XLY"
+  }
+}

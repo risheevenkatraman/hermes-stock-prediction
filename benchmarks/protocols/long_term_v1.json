@@ -1,0 +1,16 @@
+{
+  "name": "long-term-direction-v1",
+  "symbols": ["AAPL", "MSFT", "NVDA", "AMZN", "TSLA"],
+  "horizons": [126, 252],
+  "development_start": "2022-01-03",
+  "development_end": "2026-09-11",
+  "protected_start": "2026-09-28",
+  "minimum_fit_rows": 756,
+  "step_sessions": 21,
+  "primary_metric": "brier_score",
+  "target": "positive versus nonpositive adjusted close return at 126 or 252 exchange sessions",
+  "C": 0.01,
+  "positive_threshold": 0.6,
+  "negative_or_flat_threshold": 0.4,
+  "notes": "Separate fixed price/sector development experiment. Expanding matured-label fitting; common origins across horizons. Overlapping long-term outcomes are correlated; pooled accuracy is not independent evidence. No promotion or news/fundamental claims. Fixed sector assumptions and revised Yahoo history remain limitations."
+}

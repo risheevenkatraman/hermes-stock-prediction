@@ -1,58 +1,89 @@
 # Hermes
 
-A Next.js/React stock research workspace with a cream, forest-green, and soft
-orange visual identity. The Python research foundation is retained while the
-customer application is rebuilt for AWS.
+Hermes is a US-stock research application for people learning to invest and
+experienced investors exploring additional insights. It combines a personalized
+workspace with market research and aims to explain why a stock may rise or fall.
+Its interface uses a cream, dark-green, and soft-orange palette inspired by Hermes.
 
-## Implemented
+Hermes is currently in development. Forecasts are experimental: evaluations have
+not established a consistent advantage over simple baselines. The application
+does not execute trades, connect bank accounts, or provide validated personalized
+purchase recommendations.
 
-- Next.js App Router dashboard, responsive layout, accessible dialogs and chart
-  data table, ticker search, watchlists, and selectable chart ranges.
-- Profiles: USD budget, 200-character goal, investment horizon, and risk preference.
-- Cognito OAuth integration and backend access-token verification.
-- User-scoped PostgreSQL-compatible workspace persistence.
-- Cached research API with stale/error states and an offline publication worker.
-- Short-term forecast controls and a separate long-term research explanation.
-- Cognito/S3 CloudFormation foundation and Amplify build configuration.
+## Planned product features
 
-Removed the static HTML/JavaScript frontend, mock accounts, GitHub Pages builder,
-and obsolete browser tests. Retained model, news, backtest, and trader modules as
-research tools. Expensive legacy endpoints require admin access in production and
-are not used by the customer dashboard.
+- Individual accounts with email and Google sign-in.
+- A saved budget, financial goal of up to 200 characters, investment horizon,
+  and risk preference.
+- Searchable stocks, personal watchlists, current market data with clear freshness
+  information, and interactive price-history charts.
+- Short-term forecasts covering one to five trading days.
+- Six- and twelve-month positive, negative-or-flat, or uncertain outlooks without
+  implying an exact future price.
+- Recommendations matched to a user's goals and budget, supported by validated
+  predictions and concise educational explanations of up to five sentences.
+- A combined research model using price and market/sector trends, company news
+  and events, and verifiable publicly disclosed trader activity.
+- US stocks first, with international-market support planned for a later release.
+- Bank connections and trade execution as later milestones after research quality
+  and operational readiness are established.
 
-## Limits and next milestones
+## Implementation checklist
 
-The model-development foundation now includes a fixed five-horizon evaluation
-protocol, reproducible experiment directories, and shadow forecasts with saved
-estimators. [The first development report](benchmarks/results/price_v1_development.md)
-evaluated 7,700 price-only candidate forecasts; return MAE was worse than the
-zero-return baseline at every horizon. This is a baseline, not a validated upgrade.
+Checked items describe implemented code, not a verified production rollout.
 
-Research commands are `python -m benchmarks.experiment --data-dir benchmarks/results`
-and `python -m benchmarks.shadow --fetch`. Full inputs, predictions, source snapshots,
-and metrics live under ignored `data/experiments`; shadow estimators and dated
-forecasts live under `data/shadow-forecasts`. The shadow command does not update
-customer-facing research. Local instructions are in `docs/modeling.md`.
+- [x] Responsive Next.js dashboard with Hermes branding, ticker search, watchlists,
+      chart ranges, and accessible chart data.
+- [x] Saved USD budget, financial goal, horizon, and risk preferences.
+- [x] Cognito sign-in integration, Google OAuth support, token verification,
+      and user-scoped workspace storage.
+- [x] Cached research API, stale/error states, and an offline publication worker
+      that preserves forecast history.
+- [x] Experimental one- and five-trading-day price forecasts.
+- [x] Price/sector datasets, chronological benchmarks, baseline comparisons,
+      and archived research evidence.
+- [x] Timestamped news collection, quality flags, article-version tracking,
+      snapshot verification, and coverage reporting.
+- [x] Short-term news-only, price/sector-only, and combined model code with a
+      guarded evaluation runner; real news training awaits sufficient data.
+- [x] Separate six- and twelve-month direction models, evaluated on historical
+      development data; neither horizon beat the simple baselines overall.
+- [x] Dashboard support for long-term outlooks, with an unavailable state when
+      no result has been published.
+- [x] AWS deployment configuration for the web application, API, authentication,
+      database, and research archives.
+- [ ] Validated forecasts across every one-to-five-day horizon and calibrated
+      uncertainty estimates.
+- [ ] Validated news-enhanced and long-term models suitable for customer use.
+- [ ] Verified public-trader data and a tested three-stream model.
+- [ ] Goal/budget-based stock ranking and evidence-linked educational explanations.
+- [ ] International stocks, bank connections, and trade execution.
 
-Publication also preserves a separate forecast history before updating the latest
-dashboard row. On EC2 the archive is stored in the existing persistent `/data`
-volume and optionally uploaded to S3. This requires deploying the updated worker.
+Discovery cards are currently research starting points, not personalized rankings.
+The new research models do not automatically replace published forecasts or drive
+purchase recommendations.
 
-This is a working application foundation, not a customer-ready investment adviser.
-No AWS deployment or real OAuth round-trip has been verified. Deployment, local
-setup, and operating instructions live in the local-only
-`docs/` directory, which is excluded from Git.
+## Implementation stack
 
-- Actual models publish 1- and 5-trading-day forecasts. Horizons 2-4 remain
-  unavailable in research mode; synthetic preview has all five.
-- Calibrated intervals are not implemented; the old heuristic confidence is not
-  displayed. The saved hybrid benchmark measured **50.32%** direction accuracy
-  versus **52.10%** always-up across 1,568 observations, with no baseline advantage.
-  See the [benchmark report](benchmarks/results/accuracy.md).
-- Discovery cards are static research starting points, not personalized purchase
-  recommendations. Saved budgets/goals do not yet drive a validated ranker.
-- News is separate context; the three-stream model and verified trader track
-  records remain research work.
-- Long-term fundamentals, licensed production data, customer model promotion,
-  migrations, rate limits, and production operations remain milestones.
-- Research currently assumes US exchanges and USD.
+| Area           | Technology                                                              |
+| -------------- | ----------------------------------------------------------------------- |
+| Frontend       | Next.js App Router, React, TypeScript, CSS                              |
+| Backend        | Python, FastAPI, Pydantic                                               |
+| Modeling       | scikit-learn, PyTorch, pandas, NumPy, exchange-calendars                |
+| Research data  | Yahoo Finance/yfinance for local price research; Alpha Vantage for news |
+| Authentication | Amazon Cognito, Google OAuth, JWT verification                          |
+| Storage        | SQLAlchemy, PostgreSQL/Amazon RDS, local SQLite, Amazon S3 archives     |
+| Hosting        | AWS Amplify frontend; Docker/FastAPI and Caddy on Amazon EC2            |
+| Infrastructure | AWS CloudFormation foundation, Docker Compose                           |
+| Validation     | pytest, Ruff, TypeScript checks, Playwright, Prettier                   |
+
+## Next steps
+
+1. Collect prospective news consistently and finish the remaining evaluation
+   diagnostics before training on real news data.
+2. Investigate point-in-time company fundamentals for a separately evaluated
+   long-term model improvement.
+3. Build verified public-disclosure data, personalized ranking, and educational
+   explanations as their supporting evidence becomes available.
+4. Complete production data permissions, operational checks, and model validation
+   before a customer launch.

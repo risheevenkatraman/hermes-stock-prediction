@@ -24,6 +24,16 @@ export type Research = {
     expected_price: number;
     predicted_return: number;
   }[];
+  long_term?: {
+    horizon_sessions: 126 | 252;
+    months: 6 | 12;
+    as_of: string;
+    signal: "positive" | "negative_or_flat" | "uncertain";
+    status: "experimental";
+    calibrated: false;
+    recommendation_eligible: false;
+    explanation: string;
+  }[];
   news: {
     title: string;
     source: string;

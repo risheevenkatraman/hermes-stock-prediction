@@ -9,11 +9,9 @@ from backend import main
     [
         ("POST", "/news/import"),
         ("POST", "/news/refresh/SPY"),
-        ("POST", "/trader-pipeline/refresh"),
         ("GET", "/backtest/live/SPY"),
         ("GET", "/backtest/live?tickers=SPY&period=1y"),
         ("GET", "/predict/direction/live/SPY?refresh_news_first=true"),
-        ("GET", "/recommendations/live?refresh=true"),
         ("GET", "/predict/live/AAPL"),
         ("GET", "/predict/direction/live/AAPL"),
         ("POST", "/predict"),
@@ -33,21 +31,24 @@ def test_production_rejects_anonymous_admin_operations(
         assert "administrator" in response.json()["detail"]
 
 
-def test_admin_token_and_public_reads(monkeypatch):
+def test_admin_token_and_public_reads(monkeypatch, tmp_path):
     monkeypatch.setenv("HERMES_DEPLOYMENT", "production")
     monkeypatch.setenv("HERMES_ADMIN_TOKEN", "test-secret")
-    monkeypatch.setattr(main.pipeline, "refresh", lambda: [])
+    monkeypatch.setenv("NEWS_DB_PATH", str(tmp_path / "news.sqlite3"))
+    monkeypatch.setattr(main, "fetch_news", lambda *args, **kwargs: [])
+    monkeypatch.setattr(main.NewsStore, "add", lambda *args: 0)
+    monkeypatch.setattr(main.NewsStore, "status", lambda *args: {})
     client = TestClient(main.app)
     assert client.get("/health").status_code == 200
     assert client.get("/config.js").status_code == 404
     assert (
         client.post(
-            "/trader-pipeline/refresh", headers={"X-Hermes-Admin-Token": "test-secret"}
+            "/news/refresh/SPY", headers={"X-Hermes-Admin-Token": "test-secret"}
         ).status_code
         == 200
     )
     monkeypatch.delenv("HERMES_ADMIN_TOKEN")
-    assert client.post("/trader-pipeline/refresh").status_code == 403
+    assert client.post("/news/refresh/SPY").status_code == 403
 
 
 def test_cors_configuration_replaces_local_origins(monkeypatch):

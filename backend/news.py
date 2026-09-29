@@ -10,7 +10,7 @@ import re
 import sqlite3
 from contextlib import closing
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from urllib.error import URLError
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -141,9 +141,10 @@ def normalize_alpha_vantage(
     return articles
 
 
-def fetch_news(
+def fetch_news_payload(
     ticker: str, *, time_from: str | None = None, time_to: str | None = None
-) -> list[NewsArticle]:
+) -> tuple[dict, str]:
+    """Return parsed provider response and receipt time; never expose request URLs."""
     api_key = os.getenv("ALPHAVANTAGE_API_KEY", "").strip()
     if not api_key:
         raise NewsProviderError("Set ALPHAVANTAGE_API_KEY to refresh news.")
@@ -172,6 +173,15 @@ def fetch_news(
     except (URLError, TimeoutError, json.JSONDecodeError, UnicodeDecodeError) as error:
         # Provider URLs contain credentials: never return exception text to clients.
         raise NewsProviderError("News provider request failed.") from error
+    return payload, datetime.now(UTC).isoformat()
+
+
+def fetch_news(
+    ticker: str, *, time_from: str | None = None, time_to: str | None = None
+) -> list[NewsArticle]:
+    payload, observed_at = fetch_news_payload(
+        ticker, time_from=time_from, time_to=time_to
+    )
     if (
         isinstance(payload, dict)
         and isinstance(payload.get("feed"), list)
@@ -180,9 +190,7 @@ def fetch_news(
         raise NewsProviderError(
             "News response reached 1000 articles; request a narrower time range."
         )
-    return normalize_alpha_vantage(
-        payload, ticker, datetime.now(timezone.utc).isoformat()
-    )
+    return normalize_alpha_vantage(payload, ticker, observed_at)
 
 
 class NewsStore:

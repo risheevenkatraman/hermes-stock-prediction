@@ -83,7 +83,9 @@ def main():
         "",
         "Omit `--cached` to fetch a new two-year snapshot. Raw results: `accuracy.json`.",
     ]
-    (root / "accuracy.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    docs_root = Path("docs/benchmarks")
+    docs_root.mkdir(parents=True, exist_ok=True)
+    (docs_root / "accuracy.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines[:32]))
 
 

@@ -1,0 +1,15 @@
+{
+  "name": "context-v1",
+  "symbols": ["SPY", "QQQ", "AAPL", "MSFT", "NVDA", "AMZN", "TSLA"],
+  "horizons": [1, 2, 3, 4, 5],
+  "development_start": "2026-03-23",
+  "development_end": "2026-09-11",
+  "holdout_start": "2026-09-28",
+  "holdout_end": "2026-12-31",
+  "min_train_rows": 120,
+  "step": 5,
+  "calendar": "XNYS",
+  "candidate": "price_gbt_v1",
+  "primary_metric": "return_mae",
+  "notes": "Context development comparison: 252-session warmup; shared 120-label minimum; every fifth common origin. Ridge alpha=100, logistic C=0.01 fixed before this run. Existing GBT is refit on identical training rows. No calibrated probabilities or long-term models. Historical snapshot data, not point-in-time provider vintages."
+}

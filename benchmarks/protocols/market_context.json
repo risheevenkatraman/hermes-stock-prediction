@@ -1,0 +1,8 @@
+{
+  "mode": "market_only",
+  "market_proxy": "SPY",
+  "price_basis": "split_and_dividend_adjusted_close",
+  "price_vintage": "revised_historical_snapshot",
+  "source": "Existing cached Yahoo Finance adjusted OHLCV research snapshots; availability not independently verified",
+  "memberships": []
+}

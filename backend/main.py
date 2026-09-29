@@ -1,13 +1,12 @@
-"""FastAPI entry point for Hermes price and trader-flow predictions."""
+"""Customer research API and administrative model-development endpoints."""
 
 from __future__ import annotations
 
-import asyncio
 import os
 import secrets
-from contextlib import asynccontextmanager, suppress
+from contextlib import asynccontextmanager
 from dataclasses import asdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Annotated
 
 import pandas as pd
@@ -21,31 +20,15 @@ from .direction_model import predict_direction
 from .model import InsufficientHistoryError, forecast
 from .news import NewsArticle, NewsProviderError, NewsStore, fetch_news, ticker_symbol
 from .news_features import session_closes
-from .trader_pipeline import build_recommendations, pipeline
 from .storage import initialize
 from .workspace import router as workspace_router
-
-
-async def _scheduled_trader_refresh() -> None:
-    interval_minutes = float(os.getenv("TRADER_REFRESH_INTERVAL_MINUTES", "0"))
-    if interval_minutes <= 0:
-        return
-    while True:
-        await asyncio.to_thread(pipeline.refresh)
-        await asyncio.sleep(interval_minutes * 60)
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     if os.getenv("HERMES_DEPLOYMENT", "local") != "production":
         initialize()
-    refresh_task = asyncio.create_task(_scheduled_trader_refresh())
-    try:
-        yield
-    finally:
-        refresh_task.cancel()
-        with suppress(asyncio.CancelledError):
-            await refresh_task
+    yield
 
 
 app = FastAPI(title="Hermes Research API", version="0.3.0", lifespan=lifespan)
@@ -62,7 +45,7 @@ def require_admin(request: Request) -> None:
         raise HTTPException(
             status_code=403,
             detail="This operation requires server administrator access. "
-            "Use an authenticated admin API request; browser accounts are not available yet.",
+            "Use an authenticated admin API request; customer sign-in does not grant admin access.",
         )
 
 
@@ -109,73 +92,6 @@ class PredictionRequest(BaseModel):
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok", "service": "hermes-prediction-api"}
-
-
-@app.get("/trader-pipeline/status")
-def trader_pipeline_status() -> dict[str, object]:
-    """Report configured sources and the last normalized refresh."""
-    return pipeline.status()
-
-
-@app.post("/trader-pipeline/refresh", dependencies=[Depends(require_admin)])
-def refresh_trader_pipeline() -> dict[str, object]:
-    """Fetch and normalize the latest records from configured providers."""
-    records = pipeline.refresh()
-    return {
-        "refreshed_at": pipeline.last_refresh,
-        "records": len(records),
-        "status": pipeline.status(),
-        "disclaimer": "Trader disclosures can be delayed or incomplete.",
-    }
-
-
-@app.get("/recommendations/live", dependencies=[Depends(require_admin)])
-def recommendations_live(
-    request: Request,
-    refresh: bool = Query(default=True),
-    include_price_model: bool = Query(default=True),
-    limit: int = Query(default=20, ge=1, le=100),
-) -> dict[str, object]:
-    """Return current recency-weighted trader recommendations."""
-    if refresh or not pipeline.records:
-        require_admin(request)
-        pipeline.refresh()
-    if not pipeline.records:
-        raise HTTPException(
-            status_code=503,
-            detail={
-                "message": "No trader records are available.",
-                "configure": [
-                    "QUIVER_QUANT_API_URL and QUIVER_QUANT_API_KEY",
-                    "STOCKCIRCLE_API_URL and STOCKCIRCLE_API_KEY",
-                    "TRADINGVIEW_API_URL and TRADINGVIEW_API_KEY",
-                ],
-                "provider_errors": pipeline.provider_errors,
-            },
-        )
-    recommendations = build_recommendations(
-        pipeline.records,
-        include_price_model=include_price_model,
-        limit=limit,
-    )
-    return {
-        "updated_at": pipeline.last_refresh,
-        "recommendations": [
-            {
-                "ticker": item.ticker,
-                "action": item.action,
-                "score": item.score,
-                "trader_signal": item.trader_signal,
-                "trader_return": item.trader_return,
-                "trader_count": item.trader_count,
-                "sources": item.sources,
-                "recent_trades": item.recent_trades,
-                "price_forecast": item.price_forecast,
-            }
-            for item in recommendations
-        ],
-        "disclaimer": "Educational estimate, not financial advice. Disclosed trades may be delayed.",
-    }
 
 
 @app.post("/predict", dependencies=[Depends(require_admin)])
@@ -428,7 +344,7 @@ class NewsImportRequest(BaseModel):
 @app.post("/news/import", dependencies=[Depends(require_admin)])
 def import_news(request: NewsImportRequest) -> dict:
     """Import scored articles. Omitted availability means first observed now."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     try:
         articles = []
         for row in request.articles:

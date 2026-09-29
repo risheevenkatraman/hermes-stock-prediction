@@ -149,36 +149,11 @@ svg {
   line-height: 1;
 }
 .brand-mark {
-  font-family: Georgia, serif;
-  font-style: italic;
-  font-weight: bold;
-  font-size: 38px;
-  position: relative;
-  display: inline-flex;
-  width: 39px;
-  height: 45px;
-  align-items: center;
-}
-.brand-mark:after,
-.brand-mark:before {
-  content: "";
-  position: absolute;
-  width: 20px;
-  height: 3px;
-  background: var(--green);
-  transform: rotate(-22deg);
-  right: 0;
-  top: 6px;
-}
-.brand-mark:before {
-  top: 12px;
-  width: 15px;
-}
-.brand-mark span {
-  font: 15px Arial;
-  position: absolute;
-  top: 0;
-  right: 0;
+  display: block;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  object-fit: contain;
 }
 .brand-period {
   color: #b78158;
@@ -1536,9 +1511,8 @@ h1 em {
     gap: 5px;
   }
   .brand-mark {
-    font-size: 30px;
-    height: 33px;
-    width: 33px;
+    height: 44px;
+    width: 44px;
   }
   .workspace-label,
   .sidebar-note,

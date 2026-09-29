@@ -1,0 +1,17 @@
+{
+  "name": "sector-rolling-v1",
+  "symbols": ["AAPL", "MSFT", "NVDA", "AMZN", "TSLA"],
+  "horizons": [1, 2, 3, 4, 5],
+  "development_start": "2021-04-12",
+  "development_end": "2026-09-11",
+  "holdout_start": "2026-09-28",
+  "holdout_end": "2026-12-31",
+  "min_train_rows": 756,
+  "step": 1,
+  "calendar": "XNYS",
+  "candidate": "price_gbt_v1",
+  "primary_metric": "return_mae",
+  "notes": "Ten-year snapshot; fixed sector assumptions. Expanding >=756 usable training rows, 126 validation rows, <=63 daily assessment origins. Models refit once before each block; 252-session common warmup; targets all before development end. Prior grid unchanged. Partial final block reported separately; reserved forward holdout excluded.",
+  "validation_rows": 126,
+  "assessment_rows": 63
+}

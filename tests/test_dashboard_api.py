@@ -4,7 +4,6 @@ from fastapi.testclient import TestClient
 
 from backend.data import completed_daily_prices
 from backend.main import app
-from backend.trader_pipeline import normalize_records
 
 
 def test_daily_bars_exclude_an_unfinished_early_close():
@@ -31,24 +30,16 @@ def test_api_does_not_serve_legacy_frontend_or_repository():
         assert client.get(path).status_code == 404
 
 
-def test_invalid_disclosures_do_not_receive_an_invented_date():
-    records = normalize_records(
-        "test",
-        [
-            {"ticker": "SPY", "action": "buy"},
-            {"ticker": "SPY", "date": "invalid", "action": "buy"},
-            {"ticker": "SPY", "date": "2099-01-01", "action": "buy"},
-            {
-                "ticker": "SPY",
-                "date": "2025-01-01",
-                "action": "buy",
-                "reported_return": "nan",
-            },
-        ],
-    )
-    assert len(records) == 1
-    assert records[0].trade_date == "2025-01-01"
-    assert records[0].reported_return is None
+@pytest.mark.parametrize(
+    "method,path",
+    [
+        ("GET", "/trader-pipeline/status"),
+        ("POST", "/trader-pipeline/refresh"),
+        ("GET", "/recommendations/live"),
+    ],
+)
+def test_retired_unverified_trader_recommendations_are_unavailable(method, path):
+    assert TestClient(app).request(method, path).status_code == 404
 
 
 def test_optional_news_failure_preserves_price_forecast(monkeypatch):
